@@ -9,12 +9,20 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 
-meta_df = pd.read_csv(os.path.join(os.getcwd(), "..", "images", "metadata.csv"))
+os.chdir("../..")
+metadata_path = os.path.join(os.getcwd(), "images", "metadata")
 
-# images with associated ground truth masks
-gt_df = pd.read_csv(os.path.join(os.getcwd(), "..", "images", "ISIC-2017_Training_Part3_GroundTruth.csv"))
+meta_df = pd.read_csv(os.path.join(metadata_path, "metadata.csv"))
+# images with associated ground truth segmentation masks. I would like these included.
+
+train_gt = pd.read_csv(os.path.join(metadata_path, "ISIC-2017_Training_Data_metadata.csv"))
+test_gt = pd.read_csv(os.path.join(metadata_path, "ISIC-2017_Test_v2_Data_metadata.csv"))
+gt_seg = pd.concat([train_gt, test_gt], axis=0)
+
+isicIDs = meta_df["isic_id"] # length of 71, 670
+
 
 # melanoma images
 mel_df = meta_df[meta_df['diagnosis'] == 'melanoma']
