@@ -3,11 +3,13 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from skimage.metrics import structural_similarity as ssim
-from tqdm import tqdm
+# from skimage.metrics import structural_similarity as ssim
+# from tqdm import tqdm
 import concurrent.futures
 import collections
 import pprint
+from itertools import repeat
+from time import perf_counter
 
 
 def show_images(img1, img2):
@@ -43,21 +45,31 @@ def compare_images(imageA, imageB):
     return {'mse': m, 'ssim': s, 'bool': b}
 
 
-def compare_img_args(args):
+def compare_img_args(*args):
     return compare_images(*args)
 
 
 def read_img(path, size):
-    img = cv.imread(path + '.JPG')
-    img = cv.resize(img, size, interpolation=cv.INTER_AREA)
-    img = img.astype(float) / 255
-    result = {'id': path, 'img': img}
-    print("I just processed image", path)
-    return result
+    # img = cv.imread(path + '.JPG')
+    # h, w = img.shape[:2]
+    # if h > w:
+    #     img = cv.rotate(img, cv.ROTATE_90_CLOCKWISE)
+    #     h, w = img.shape[:2]
+    # if np.round(w / h, 2) != np.round(4.0/3.0, 2):
+    #     h = int(np.round(w * 0.75))
+    #     img = img[0:h, :]
+    # if w > size[0]:
+    #     img = cv.resize(img, size, interpolation=cv.INTER_AREA)
+    #
+    # img = img.astype(float) / 255
+    img_result = {'id': path, 'img': "bob"}
+    return img_result
 
 
-def read_img_args(kwargs):
-    return read_img(**kwargs)
+def read_img_args(*args, **kwargs):
+    # print(kwargs.keys())
+    # print(args, kwargs.values())
+    return read_img(args, kwargs.values())
 
 # for count_i, value_i in enumerate(tqdm(data_base["isic_id"], position=0, desc="i", leave=False, colour='green', ncols=70)):
 #     image1 = read_img(data_base["isic_id"][count_i] + ".JPG", size)
@@ -85,14 +97,14 @@ def read_img_args(kwargs):
 # print(f'mse = {m}, ss = {s}, boolean comparator = {b}')
 # show_images(image1, image2)
 
-if __name__ == '__main__':
+def main():
     img_path = os.path.join(os.getcwd(), "..", "..", "images", "ISIC-database")
     file_path = os.path.join(os.getcwd(), "..", "..", "images", "metadata")
     os.chdir(file_path)
     SIZE_ = (512, 384)
     data = pd.read_csv("metadata.csv", usecols=["isic_id"])
-    file_list = list(data["isic_id"][:10])
-    print(file_list)
+    file_list = list(data["isic_id"][:1000])
+    # print(file_list)
 
     # data_base = data.copy()
     # data_comparator = data.copy()
@@ -104,26 +116,34 @@ if __name__ == '__main__':
     ])
 
     files = ()
-    counter = 0
-
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    start = perf_counter()
+    # https://medium.com/mlearning-ai/how-do-i-make-my-for-loop-faster-multiprocessing-multithreading-in-python-8f7c3de36801
+    # https://superfastpython.com/processpoolexecutor-search-text-files/
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         # result = executor.map(read_img, file_list)
-        result = executor.map(read_img_args, {"size": SIZE_, "path": file_list})
+        futures = [executor.submit(read_img, f, SIZE_) for f in file_list]
+        for future in concurrent.futures.as_completed(futures):
+            files = files + (future.result(), )
+    end = perf_counter()
+    print(end-start)
+    files = ()
+    start = perf_counter()
+    for f in file_list:
+        files = files + (read_img(f, SIZE_), )
+    end = perf_counter()
+    print(end-start)
+    # print(files)
 
-    pprint(tuple(result))
+    # counter = 0
+    # for f in file_list:
+    #     files = files + (read_img(f), )
+    # for dirname, _, filename in os.walk(os.getcwd()):
+    #     for f in tqdm(filename, position=0, desc="files", leave=False, colour="green", ncols=10):
+    #         if f.endswith(".JPG"):
+    #             files = files + (file(id=f[:-4], img=read_img(f, size=sz)),)
+    #             if counter >= 20:
+    #                 break
+    #         counter += 1
 
-# for dirname, _, filename in os.walk(os.getcwd()):
-#     for f in tqdm(filename, position=0, desc="files", leave=False, colour="green", ncols=10):
-#         if f.endswith(".JPG"):
-#             files = files + (file(id=f[:-4], img=read_img(f, size=sz)),)
-#             if counter >= 20:
-#                 break
-#         counter += 1
-# print(files)
-
-# with concurrent.futures.ProcessPoolExecutor() as executor:
-#     for counter, i in enumerate(tqdm(data_base['isic_id'][counter], colour='green', ncols=70, desc="base progress")):
-#         results = list(executor.map(process_img, names))  # target_size, file, save_path
-
-# for result in results:
-#     print(result)
+if __name__ == '__main__':
+    main()
