@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # from tqdm import tqdm
 import concurrent.futures
 import collections
-import pprint
+from pprint import pprint
 from itertools import repeat
 from time import perf_counter
 
@@ -49,7 +49,7 @@ def compare_img_args(*args):
     return compare_images(*args)
 
 
-def read_img(path, size):
+def read_img(path, size, save=False):
     # img = cv.imread(path + '.JPG')
     # h, w = img.shape[:2]
     # if h > w:
@@ -61,17 +61,16 @@ def read_img(path, size):
     # if w > size[0]:
     #     img = cv.resize(img, size, interpolation=cv.INTER_AREA)
     #
+    if save:
+        # should already be in the ISIC-dataset image directory
+        save_path = os.path.join(os.getcwd(), "..", "resized")
+        cv.imwrite(save_path, img)
     # img = img.astype(float) / 255
-    img_result = {'id': path, 'img': "bob"}
+
+    img_result = dict(id=path, img="bob")
     return img_result
 
 
-def read_img_args(*args, **kwargs):
-    # print(kwargs.keys())
-    # print(args, kwargs.values())
-    return read_img(args, kwargs.values())
-
-# for count_i, value_i in enumerate(tqdm(data_base["isic_id"], position=0, desc="i", leave=False, colour='green', ncols=70)):
 #     image1 = read_img(data_base["isic_id"][count_i] + ".JPG", size)
 #     data_comparator = data_comparator.drop(index=0).reset_index(drop=True)
 #     for count_j, value_j in enumerate(tqdm(data_comparator["isic_id"], position=1, desc="j", leave=False, colour="red", ncols=70)):
@@ -101,27 +100,26 @@ def main():
     img_path = os.path.join(os.getcwd(), "..", "..", "images", "ISIC-database")
     file_path = os.path.join(os.getcwd(), "..", "..", "images", "metadata")
     os.chdir(file_path)
-    SIZE_ = (512, 384)
     data = pd.read_csv("metadata.csv", usecols=["isic_id"])
-    file_list = list(data["isic_id"][:1000])
-    # print(file_list)
+    file_list = list(data["isic_id"][:10])
+    size_ = (512, 384)
 
     # data_base = data.copy()
     # data_comparator = data.copy()
     os.chdir(img_path)
 
-    file = collections.namedtuple("images", [
-        'id',
-        'img',
-    ])
+    # img_tuple = collections.namedtuple("images", [
+    #     'id',
+    #     'img',
+    # ])
 
     files = ()
     start = perf_counter()
     # https://medium.com/mlearning-ai/how-do-i-make-my-for-loop-faster-multiprocessing-multithreading-in-python-8f7c3de36801
     # https://superfastpython.com/processpoolexecutor-search-text-files/
+    # https://stackoverflow.com/questions/67189283/how-to-keep-the-original-order-of-input-when-using-threadpoolexecutor
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        # result = executor.map(read_img, file_list)
-        futures = [executor.submit(read_img, f, SIZE_) for f in file_list]
+        futures = [executor.submit(read_img, f, size_) for f in file_list]
         for future in concurrent.futures.as_completed(futures):
             files = files + (future.result(), )
     end = perf_counter()
@@ -129,10 +127,9 @@ def main():
     files = ()
     start = perf_counter()
     for f in file_list:
-        files = files + (read_img(f, SIZE_), )
+        files = files + (read_img(f, size_), )
     end = perf_counter()
     print(end-start)
-    # print(files)
 
     # counter = 0
     # for f in file_list:
@@ -144,6 +141,7 @@ def main():
     #             if counter >= 20:
     #                 break
     #         counter += 1
+
 
 if __name__ == '__main__':
     main()
