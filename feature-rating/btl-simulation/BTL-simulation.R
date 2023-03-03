@@ -3,6 +3,14 @@ library(rstan)
 rstan_options(auto_write=TRUE)
 options(mc.cores = parallel::detectCores(logical = FALSE))
 
+
+##########
+# You will want to toggle:
+# n_simulations: iterations per level
+# n_participants: you have a constant trial count of 450 per participant. Therefore, the total number of trials is relative to this hyperparameter
+# n_players: the number of images to be included. A maximum value of 71ish thousand.
+
+
 run_bay = FALSE
 #per iteration:
 #   both: ~13s
