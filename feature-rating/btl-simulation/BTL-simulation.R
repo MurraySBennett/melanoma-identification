@@ -3,6 +3,8 @@ library(rstan)
 rstan_options(auto_write=TRUE)
 options(mc.cores = parallel::detectCores(logical = FALSE))
 
+setwd("C:/Users/qlm573/melanoma-identification/feature-rating/btl-simulation")
+
 
 ##########
 # You will want to toggle:
