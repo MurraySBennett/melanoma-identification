@@ -7,8 +7,18 @@ options(mc.cores = parallel::detectCores(logical = FALSE))
 ##########
 # You will want to toggle:
 # n_simulations: iterations per level
-# n_participants: you have a constant trial count of 450 per participant. Therefore, the total number of trials is relative to this hyperparameter
-# n_players: the number of images to be included. A maximum value of 71ish thousand.
+# min_trials and n_participants: you have a constant trial count of 450 per participant. Therefore, the total number of trials is relative to this hyperparameter
+# min_ and max_ players: the number of images to be included. A maximum value of 71ish thousand.
+
+##########
+# Returns:
+# correlation between predicted and actual alpha
+# Chi^2 test results between expected and observed alpha
+# ranking error estimates
+# rmse
+# graph connectivity
+# proportion of n_players accessed
+# strength of connectivity ?
 
 
 run_bay = FALSE
@@ -18,11 +28,10 @@ run_bay = FALSE
 #   Bay: ~13s
 
 n_simulations = 1 # 1000?
-
-n_participants <- 1 # you want to overestimate this, to see how far back you need to go.
+n_participants <- 2 # you want to overestimate this, to see how far back you need to go.
 
 min_trials <- 450 # 450 trials over ~25mins - this is a kind of proxy for n_participants
-max_trials <- 450 #min_trials * n_participants
+max_trials <- min_trials * n_participants
 n_trials <- seq(min_trials, max_trials, min_trials)
 
 min_players <- 100
