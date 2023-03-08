@@ -3,9 +3,9 @@ library(rstan)
 library(igraph)
 library(furrr)
 
-rstan_options(auto_write=TRUE)
+rstan_options(auto_write=TRUE) # stops rstan recompiling unchanged stan programs
 no_cores <- availableCores() - 1
-options(mc.cores = parallel::detectCores(logical = FALSE))
+options(mc.cores = parallel::detectCores())
 
 setwd("C:/Users/qlm573/melanoma-identification/feature-rating/btl-simulation")
 save_data = TRUE
@@ -33,21 +33,21 @@ run_bay = FALSE
 #   MLE: ~0.12s
 #   Bay: ~13s
 
-n_simulations = 1000
+n_simulations = 100
 
 min_participants <- 40
 max_participants <- 80 # you want to overestimate this, to see how far back you need to go.
 participant_step <- 10
 
 trials_per_participant <- 450
-min_trials <- trials_per_particiapant * min_participants # 450 trials over ~25mins - this is a kind of proxy for n_participants
-max_trials <- trials_per_particiapant * max_participants
-n_trials <- seq(min_trials, max_trials, trials_per_particiapant * participant_step)#participant_step * trials_per_particiapant)
+min_trials <- trials_per_participant * min_participants # 450 trials over ~25mins - this is a kind of proxy for n_participants
+max_trials <- trials_per_participant * max_participants
+n_trials <- seq(min_trials, max_trials, trials_per_participant * participant_step)#participant_step * trials_per_particiapant)
 
-
+# you can get condition combinations using expand.grid(levelsA, levelsB, ..., levelsN)
 
 min_players <- 5000 # players === images
-max_players <- 70000# 40000
+max_players <- 75000
 n_players <- seq(min_players, max_players, min_players) # you might want to make a specific step variable
 
 
@@ -56,7 +56,7 @@ total_sims <- length(n_trials) * length(n_players) * n_simulations
 # trial_list<-list(rep(n_trials, length(n_players), each=n_simulations))
 # player_list<-list(rep(n_players, 1, each=n_simulations*length(n_trials)))
 
-sim_col_names <- c("n_trials", "n_players", "sim_no", "sp_rho", "rmse", "connected", "n_components", "mu_dist", "max_dist", "e_density", "diam", "med_deg", "min_deg", "max_deg")
+sim_col_names <- c("n_trials", "n_players", "sim_no", "sp_rho", "sp_p", "rmse", "connected", "n_components", "mu_dist", "max_dist", "e_density", "diam", "med_deg", "min_deg", "max_deg")
 sim_data <- data.frame(matrix(ncol=length(sim_col_names), nrow=total_sims, dimnames = list(NULL, sim_col_names)))
 
 
@@ -139,8 +139,10 @@ nDCG <- function(relevance){
 
 get_desc <- function(actual, predicted) {
   sp_rho <- NA
+  sp_p <- NA
   tryCatch({
     sp_rho <- cor(actual, predicted, method = "spearman", use="complete.obs")
+    sp_p <- round(cor.test(actual, predicted, method="spearman")$p.value, 4)
   }, error=function(e){}
   )
   # rank error doesn't represent the error of individual ability predictions. 
@@ -148,7 +150,7 @@ get_desc <- function(actual, predicted) {
   # ndcg <- nDCG(relevance)
   rmse <- sqrt(mean((actual-predicted)^2))
   
-  return ( c(sp_rho, rmse) )
+  return ( c(sp_rho, sp_p, rmse) )
 }
 
 
@@ -190,9 +192,9 @@ for (t in seq_along(n_trials)){
         ranked_bay <- extract(ind_post)$ranking
       }
 
-      ranked_mle <- mle_est$par[paste("ranked[", 1:n_players, "]",sep="")]
+      ranked_mle <- mle_est$par[paste("ranked[", 1:n_players[p], "]",sep="")]
       rank_actual <- abs(rank(alpha) - n_players[p]) + 1 # highest alpha to lowest
-      rank_pred <- abs(rank(mle_est$par[paste("alpha[", 1:n_players, "]",sep="")]) - n_players[p])
+      rank_pred <- abs(rank(mle_est$par[paste("alpha[", 1:n_players[p], "]",sep="")]) - n_players[p])
 
       gr <- graph(edges=get_edges(df), n=n_players[p])
 
