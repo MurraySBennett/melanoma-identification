@@ -8,6 +8,7 @@ no_cores <- availableCores() - 1
 options(mc.cores = parallel::detectCores())
 
 setwd("C:/Users/qlm573/melanoma-identification/feature-rating/btl-simulation")
+
 save_data = TRUE
 
 ##########
@@ -35,20 +36,24 @@ run_bay = FALSE
 
 n_simulations = 100
 
-min_participants <- 40
-max_participants <- 80 # you want to overestimate this, to see how far back you need to go.
+# the simulations crash R when I run on the full values so I am scaling like a 
+# responsible data scientist.
+scaling <- 100
+
+min_participants <- 10
+max_participants <- 250
 participant_step <- 10
 
-trials_per_participant <- 450
-min_trials <- trials_per_participant * min_participants # 450 trials over ~25mins - this is a kind of proxy for n_participants
+trials_per_participant <- 450 # 450 trials over ~25mins - this is a kind of proxy for n_participants
+min_trials <- trials_per_participant * min_participants 
 max_trials <- trials_per_participant * max_participants
-n_trials <- seq(min_trials, max_trials, trials_per_participant * participant_step)#participant_step * trials_per_particiapant)
+n_trials <- round(seq(min_trials, max_trials, trials_per_participant * participant_step) / scaling)
 
-# you can get condition combinations using expand.grid(levelsA, levelsB, ..., levelsN)
 
 min_players <- 5000 # players === images
 max_players <- 75000
-n_players <- seq(min_players, max_players, min_players) # you might want to make a specific step variable
+player_step <- 5000
+n_players <- round(seq(min_players, max_players, player_step) / scaling)
 
 
 total_sims <- length(n_trials) * length(n_players) * n_simulations
@@ -56,7 +61,7 @@ total_sims <- length(n_trials) * length(n_players) * n_simulations
 # trial_list<-list(rep(n_trials, length(n_players), each=n_simulations))
 # player_list<-list(rep(n_players, 1, each=n_simulations*length(n_trials)))
 
-sim_col_names <- c("n_trials", "n_players", "sim_no", "sp_rho", "sp_p", "rmse", "connected", "n_components", "mu_dist", "max_dist", "e_density", "diam", "med_deg", "min_deg", "max_deg")
+sim_col_names <- c("n_participants", "n_trials", "n_players", "sim_no", "sp_rho", "sp_p", "rmse", "connected", "n_components", "mu_dist", "max_dist", "e_density", "diam", "med_deg", "min_deg", "max_deg")
 sim_data <- data.frame(matrix(ncol=length(sim_col_names), nrow=total_sims, dimnames = list(NULL, sim_col_names)))
 
 
@@ -107,10 +112,13 @@ get_edges <- function(df){
 }
 
 get_graph_desc <- function(graph){
+  
   fully_connected <- is_connected(graph)
   n_components <- components(graph)$no
+  
   mu_dist <- mean_distance(graph, directed=FALSE)
   max_dist <- max(distances(graph))
+  
   e_density <- edge_density(graph, loops=FALSE)
   # greatest distance between a pair of items -- the longest shortest distance between two items.
   diam <- diameter(graph)
@@ -138,6 +146,7 @@ nDCG <- function(relevance){
 }
 
 get_desc <- function(actual, predicted) {
+  
   sp_rho <- NA
   sp_p <- NA
   tryCatch({
@@ -161,15 +170,14 @@ mle_model   <- stan_model("individual-uniform.stan")
 
 tic()
 
-
 sim_counter <- 1
 # Run simulations
+
 for (t in seq_along(n_trials)){
   for (p in seq_along(n_players)){
     for (s in 1:n_simulations){
       alpha <- center(rnorm(n_players[p]))
       df <- simulate_data(n_players[p], n_trials[t], alpha)
-
       model_data <-
         list(K = n_players[p],
              N = n_trials[t],
@@ -177,12 +185,12 @@ for (t in seq_along(n_trials)){
              player1 = df$player1,
              y = df$winner
              )
-
+      
       mle_est <- optimizing(mle_model, data=model_data)
       if (run_bay) {
         ind_post<- sampling(bayes_model, data=model_data)
       }
-
+      
       alpha_star  <- mle_est$par[paste("alpha[", 1:n_players[p], "]", sep="")]
       if (run_bay) {
         alpha_hat   <- rep(NA, n_players[p])
@@ -195,11 +203,10 @@ for (t in seq_along(n_trials)){
       ranked_mle <- mle_est$par[paste("ranked[", 1:n_players[p], "]",sep="")]
       rank_actual <- abs(rank(alpha) - n_players[p]) + 1 # highest alpha to lowest
       rank_pred <- abs(rank(mle_est$par[paste("alpha[", 1:n_players[p], "]",sep="")]) - n_players[p])
-
+      
       gr <- graph(edges=get_edges(df), n=n_players[p])
-
-      sim_data[sim_counter, ] <- c(n_trials[t], n_players[p], s, get_desc(rank_actual, rank_pred), get_graph_desc(gr) )
-
+      sim_data[sim_counter, ] <- c(ceiling(n_trials[t] / trials_per_participant * scaling), n_trials[t] * scaling, n_players[p] * scaling, s, get_desc(rank_actual, rank_pred), get_graph_desc(gr) )
+      
       sim_counter = sim_counter + 1
 
     }
@@ -208,10 +215,10 @@ for (t in seq_along(n_trials)){
 toc()
 
 if (save_data){
-  write.csv(sim_data, paste('.\\simulation_p', min_participants, '-', max_participants, '_images', min_players, '-', max_players, '.csv',sep=""), row.names=FALSE)
+  write.csv(sim_data, paste('.\\simulation-data\\simulation_p', min_participants, '-', max_participants, '_images', min_players, '-', max_players, '.csv',sep=""), row.names=FALSE)
 }
 
-
+View(sim_data)
 
 
 
