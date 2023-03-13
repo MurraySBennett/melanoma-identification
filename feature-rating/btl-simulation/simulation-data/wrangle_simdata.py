@@ -37,20 +37,25 @@ df_summary = df.groupby(["n_players", "n_trials"], as_index=False).agg("mean")
 
 print(df_summary)
 
+z_var = "connected" # "n_components" #"sp_rho"
+
 x = df_summary["n_players"]
 y = df_summary["n_trials"]
-z = df_summary["sp_rho"]
+z = df_summary[z_var]
 
-fig, ax = plt.subplots(1, 2, figsize=(8, 8))
+print(np.corrcoef(df_summary["connected"], df_summary["sp_rho"]))
+
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 ax = plt.axes(projection="3d")
-ax.scatter(x, y, z)
+# ax.scatter(x, y, z+0.005)
 ax.set_title("BTL Simulations")
 ax.set_xlabel("$\it{n}$ Images")
 ax.set_ylabel("$\it{n}$ Trials")
-ax.set_zlabel("P(fully connected)")
-ax.set_zlim([0, 1])
+ax.set_zlabel(z_var)
+# ax.set_zlim([0, 1])
 
-plt.show()
+# plt.show()
 
 # X, Y = np.meshgrid(x, y)
 X, Y = np.meshgrid(np.unique(x), np.unique(y))
@@ -61,6 +66,11 @@ Z.fill(np.nan)
 Z[x_idx, y_idx] = z
 Z = Z.T
 
-ax = plt.axes(projection="3d")
+# ax = plt.axes(projection="3d")
 ax.plot_surface(X, Y, Z, cmap="plasma")
 plt.show()
+
+pareto_data = df_summary[["n_trials", "n_players", "sp_rho", "connected"]]
+# set some goals/objectives
+pareto_data = pareto_data[(pareto_data["connected"] > 0.9) & (pareto_data["sp_rho"] > 0.5)]
+# maximise images and rho
