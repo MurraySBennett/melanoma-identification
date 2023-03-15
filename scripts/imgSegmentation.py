@@ -6,14 +6,9 @@ from ColourBalance import *
 import multiprocessing
 import time
 
-year = 2017 #
-n = 15  # number of images to process
+n = 1  # number of images to process
 size = (512, 384)
 
-# ISIC files/folders are
-# 'ISIC-2020', 'metadata.csv' or 'ISIC-2017','ISIC-2017_Training_Part3_GroundTruth.csv'
-# When you change between data sets, you need to change how the data is read, too.
-## 
 def display(img, labels, shape_factor):
     plt.figure(figsize=(len(img*2), 3))
     for i in range(len(img)):
@@ -30,14 +25,10 @@ def display(img, labels, shape_factor):
     plt.show()
 
 
-def read_data(n_img, year):
-    if year == 2017:
-        df = pd.read_csv(os.path.join(os.getcwd(), 'images', 'ISIC-2017', 'ISIC-2017_Training_Part3_GroundTruth.csv'), sep=',')
-        mal_df, ben_df = [x for _, x in df.groupby(df['melanoma'] == 1)]
-    else:
-        df = pd.read_csv(os.path.join(os.getcwd(), 'images', 'ISIC-2020', 'metadata.csv'), sep=',')
-        df.rename(columns={'isic_id': 'image_id'}, inplace=True)
-        mal_df, ben_df = [x for _, x in df.groupby(df['benign_malignant'].str.contains(r'benign', na=True))]
+def read_data(n_img):
+    df = pd.read_csv(os.path.join(os.getcwd(), "images", "ISIC-database", "metadata.csv"), sep=",")
+    df.rename(columns={"isic_id": "image_id"}, inplace=True)
+    mal_df, ben_df = [x for _, x in df.groupby(df["benign_malignant"].str.contains(r"benign", na=True))]
 
     mal_df = mal_df.iloc[:n_img].reset_index()
     ben_df = ben_df.iloc[:n_img].reset_index()
@@ -66,14 +57,10 @@ def img_seg(img, size):
     return rsz, col_adj, col_bal, processed, masked_img, mask, contour, contoured_img, SV_conversion
 
 
-data, mal, ben = read_data(n, year)
+data, mal, ben = read_data(n)
 
-if year == 2017:
-    img_path = os.path.join(os.getcwd(), 'images', 'ISIC-2017', 'ISIC-2017_Training_Data')
-    extension = '.jpg'
-else:
-    img_path = os.path.join(os.getcwd(), 'images', 'ISIC-2020')
-    extension = '.JPG'
+img_path = os.path.join(os.getcwd(), 'images', 'ISIC-database')
+extension = '.JPG'
 
 mal['og'] = [cv2.imread(os.path.join(img_path, i + extension)) for i in mal['image_id']]
 mal['rsz'], mal['col_adj'], mal['col_bal'], mal['proc'], mal['masked'], mal['mask'], mal['contour'], mal['contoured'], mal['SV'] = map(list, zip(*[img_seg(i, size) for i in mal['og']]))

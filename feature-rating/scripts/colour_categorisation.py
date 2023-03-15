@@ -11,6 +11,8 @@ from scipy.spatial.distance import minkowski
 
 
 def show_images(img1, img2):
+    # img1 = cv.cvtColor(img1, cv.COLOR_LAB2RGB)
+    # img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
     f, ax = plt.subplots(1, 2, figsize=(5, 5))
     ax[0].imshow(img1)
     ax[1].imshow(img2)
