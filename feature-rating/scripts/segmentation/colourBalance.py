@@ -89,7 +89,7 @@ class colour_balance:
         return auto_result  # , alpha, beta)
 
 
-def process_img(img,size):
+def process_img(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # hair removal code from sunnyshah2894
     # Kernel for the morphological filtering
@@ -101,9 +101,10 @@ def process_img(img,size):
     # intensify the hair countours in preparation for the inpainting algorithm
     ret, thresh2 = cv2.threshold(blackhat, 5, 255, cv2.THRESH_BINARY)
     # inpaint the original image depending on the mask
-    dst = cv2.inpaint(img, thresh2, 6, cv2.INPAINT_TELEA)
+    processed  = cv2.inpaint(img, thresh2, 6, cv2.INPAINT_TELEA)
 
-    return gray, blackhat, thresh2, dst
+    # return gray, blackhat, thresh2, dst
+    return processed 
 
 def crop_img(img, prop):
     # prop is the proportion of the image. The idea is that I will crop the edges before resizing it.
@@ -222,7 +223,7 @@ def hsv_channel(img):
     mask = np.zeros((w, h)).astype(np.uint8)
     cv2.fillPoly(mask, pts=[largest], color=(255, 255, 255))
 
-    return mask, largest, return_img, converted_img # largest contour
+    return mask, largest, return_img#, converted_img # largest contour
 
 def get_shape_factor(contour):
     # https://pdf.sciencedirectassets.com/271303/1-s2.0-S0895611100X00948/1-s2.0-S0895611103000545/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEMj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIGdm6zrlnd7Hg%2BH4W8hoik9TM3KjexKia0jQPetbBrQmAiEA%2Bdh08eEjgjDKdnfrm59LHYH9JUWPZ%2Bs8BDWB5PiJF4wqzAQIYBAFGgwwNTkwMDM1NDY4NjUiDDPrSqf5yEYJpHEZLiqpBB7JBs6FCxyYczj03OtJKqUhAQ0VPrDm9STHla1pAlSkJU93iMrI7hI%2FpeMANd0Vred2aWxKI9Ez0mZlbJDGFrZfm1A9I3QRU%2BLFmrwpJl%2BTxHVW3mGK09uqJBUWfX4IFpVQ0VG4czBnf497hYmR%2FMq1kugT5g8GeqgUTrE1jK7QCVnON5sCdk9Xc1s3DxqPmQd8hIFuJxp7Yda9R9eAg1R%2Fvaa0mxP1CVUVJy2aXo80zVS2m8MVVfRkKdOKqSbZdTdfVrgIpL2OD1zcYKbyzCFBuFyqhoAe%2Fp3vXHqUIN2I3ny3awe3ntzoCtYDhxqEFb%2FP5SYklGlUiYw%2B3AcWdPtwqfYHrw6MxLZxuiL7iogpzU7%2FSj%2FAvR%2F9p1k%2BISmsKB6o4GnpVKTsMDse%2BxTPdNLKygBI%2BPXYVUN3sTCBvY9XQXtgAbikMCMIVxJ7fOR%2BR4KB%2BNWC6KR0azM02iw4U3HX2p3bIvkyOKjly69MupoIzOJ48PgtZuUHwesUwxuRQhdLww5yYuq5x6SfCpIc2RTgdGMHvWLW%2FybVecVt7LorP9rLE1oMrL1IbJdKe71pdEIiYAD4KZdVTmwXz13W1b6QWClS%2Bvr5osVzxsahqs2rmj%2BiGOFvJ%2BphUeBiaCf%2FRXMtuptGgdqJZe86dzJ0ZXuq71URziX0eu4YPMsjSadC6OAcUnVrtnHokSZOVGoEESV%2BuR2NKLtreXU0XzOb6hebsncl%2FUOhFlQw6bC%2BnwY6qQFu2wNZL1zSDaSW5Sp4IaxEDswfyx71UwjYwVrw96nHV%2BYozq12YeO61yAi8Us0HHh0TD10y5OoaVVfsodTroEZVrtyWKx0lho9ge50hqEdjbOBU%2FQSb4cJym6LhfH26F0fGe7k2Du5PsUdEa44yVmSDXy0zLnM1k0trMoJBYUKhtOYgh%2BuT6CimR3WMRgbeJLAr0OtNUUO1nPTvnFJSYY2TikRc0lkC75h&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230217T161549Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTY3OXPVD2N%2F20230217%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=509164e150f9b7696987aca663bcaeed81bffdba0e0c906c9783bc8a3d168c81&hash=111506bd9b885b92221043a2e39709ef4733e44f45a8e56da27c93b3bb61c1df&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S0895611103000545&tid=spdf-86a78e3a-2a79-4a69-a0f7-a4307bab079f&sid=5951b1b48f3ff34dcd2b2f624690359e5cedgxrqa&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=0f11575d040800550604&rr=79afd2ee5ecd2cb4&cc=us
