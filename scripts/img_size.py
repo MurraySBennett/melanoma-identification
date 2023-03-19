@@ -46,7 +46,7 @@ def process_img(file_name):
     if np.round(w / h, 2) != np.round(4.0/3.0, 2):
         # set aspect to 4:3 by setting the height to be 0.75*width
         h = int(np.round(w * 0.75))
-        img = img[0:h, :]  # img[rows,columns]
+        img = img[0:h-1, :]  # h-1 so you don't add a border to the image
 
     # resize images for memory -- I think they'll all be resized down to 256,192
     # for the experiment and the image analysis.

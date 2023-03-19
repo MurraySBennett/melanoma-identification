@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.cluster import KMeans
 from collections import Counter
 from kneed import KneeLocator
@@ -41,6 +40,7 @@ def palette_perc(k_cluster, show_image=False):
     palette = np.zeros((50, width, 3), np.uint8)
 
     n_pixels = len(k_cluster.labels_)
+    cluster_labels = k_cluster.labels_
     counter = Counter(k_cluster.labels_)
     perc = {}
     for i in counter:
@@ -64,7 +64,6 @@ def palette_perc(k_cluster, show_image=False):
 
 # https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0234352#sec002
 def col_var(clustered_colours, colour_pct):
-
     colour_list = ["black", "dark-brown", "light-brown", "red", "white", "blue-gray"]
     black = [0, 0, 0]
     white = [100, 0, 0]
