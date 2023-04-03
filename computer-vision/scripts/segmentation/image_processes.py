@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tk import *
 
+from file_management import save_img, set_logger
+from minimise_dca import *
+
 def display(img, labels):
     """ show images """
     plt.figure(figsize=(len(img*2), 3))
@@ -15,7 +18,28 @@ def display(img, labels):
     plt.show()
 
 
-def process_img(img):
+def process_img(img, n_clusters=6, segment='otsu', save_img_label=None):
+    """ combine all functions for full processing method """
+    logger = set_logger()
+    try:
+        original = img.copy()
+        # dca = get_dca(img)
+        # img = paint_dca(dca[0], dca[1], method='inpaint_ns')
+        img = hair_rm(img)
+        img = colour_cluster(img, n_clusters)
+        img = my_clahe(img)
+        if segment == 'otsu':
+            mask = otsu_segment(original, img)
+        elif segment == 'grabcut':
+            mask = grabcut_segment(original, img)
+        if save_img_label is not None:
+            save_img_label(mask, save_img_label) 
+        return mask
+    except Exception as e:
+        logger.error('An error occurred: %s', e)
+
+
+def hair_rm(img):
     """ reduce hair and skin texture artefacts """
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     # Kernel for the morphological filtering
@@ -29,6 +53,7 @@ def process_img(img):
     # inpaint the original image depending on the mask
     processed  = cv.inpaint(img, thresh2, 6, cv.INPAINT_TELEA)
     return processed 
+
 
 def segment(img):
     contoured_image = img.copy()  # copy() so that you are not drawing over the original image
@@ -68,6 +93,7 @@ def segment(img):
 
     return mask, largest_contour, contoured_image
 
+
 def colour_cluster(img, n_clusters):
     """ cluster image colours for improved border detection """
     median = cv.medianBlur(img, 5)
@@ -105,7 +131,7 @@ def otsu_thresh(img):
     blur = cv.GaussianBlur(converted_img, (5,5), 0)
     ret, otsu = cv.threshold(blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
     canny_otsu = cv.Canny(otsu, 100, 200)
-    kernel = np.ones((12, 12), np.uint8)
+    kernel = np.ones((5, 5), np.uint8)
     canny_otsu = cv.dilate(canny_otsu, kernel, iterations=1)
     return canny_otsu
 
@@ -161,7 +187,6 @@ def grabcut(img, enhanced_img, inv_mask):
         grabcut_img = img*mask2[:, :, np.newaxis]
 
     return grabcut_img
-
 
 
 def grabcut_segment(img, enhanced):

@@ -1,5 +1,27 @@
 import cv2 as cv
 import os
+import h5py
+import numpy as np
+import logging
 
-def save_img(img, path, label):
-    cv.imwrite(os.path.join(path, label) + '.jpg', img)
+def read_img(img_path):
+    img = cv.imread(img_path)
+    return img
+
+
+def save_img(img, path):
+    if img is None:
+        print('error: no image')
+    else:
+        cv.imwrite(path, img)
+
+
+def set_logger():
+    # Set up the logging handlers and loggers
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    file_handler = logging.FileHandler('errors.log')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    return logger

@@ -74,5 +74,5 @@ if __name__ == '__main__':
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() -1) as executor:
         futures = [executor.submit(process_img, i) for i in names]
     end = perf_counter()
-    print(f'time elapsed: {start-perf_counter()}')
+    print(f'time elapsed: {perf_counter()-start}')
 

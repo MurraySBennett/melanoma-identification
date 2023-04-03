@@ -5,8 +5,6 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from collections import Counter
-from kneed import KneeLocator
-from scipy.spatial.distance import minkowski
 
 
 def show_images(img1, img2):
@@ -28,11 +26,30 @@ def get_mean(img):
     return img_mean, img_tmp
 
 
-def read_img(path):
-    img = cv.imread(path)
-    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-    # img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-    return img
+def combine_imgmask(img_path, mask_path):
+    """ read img, read mask, return combined """
+    img_id = split(img_path, '/', 
+    print(img_id)
+    try:
+        img = cv.imread(img_path)
+        mask = cv.imread(mask_path, -1)
+        img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+        print(img.shape, mask.shape)
+        if img.shape[:2] != mask.shape[:2]:
+            # Resize or crop the mask to match the image size
+            print("incompatible image and mask sizes")
+            # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
+        masked = impose_mask(img, mask)
+        return [masked, img_id]
+    except Exception as e:
+        print(f"Error processing {img_path} and {mask_path}: {e}")
+        return None
+
+
+def impose_mask(img, mask):
+    """ slap mask onto image """
+    masked = cv.bitwise_and(img, img, mask=mask.astype(np.uint8))
+    return masked
 
 
 def palette_perc(k_cluster, show_image=False):
@@ -66,37 +83,65 @@ def palette_perc(k_cluster, show_image=False):
 def col_var(clustered_colours, colour_pct):
     colour_list = ["black", "dark-brown", "light-brown", "red", "white", "blue-gray"]
     black = [0, 0, 0]
-    white = [100, 0, 0]
-    red = [54.29, 80.81, 69.89]
-    blue_gray = [50.28, -30.14, -11.96]
     p = 3
     T = round(minkowski(black, white, p) / 2)
 
     minkowski_colours = [colour for idx, colour in enumerate(clustered_colours) if colour_pct[idx] >= 0.05]
-    minkowski_white = [minkowski(white, ic, p) < T for ic in minkowski_colours]
-    minkowski_red = [minkowski(red, ic, p) < T for ic in minkowski_colours]
-    minkowski_blue_gray = [minkowski(blue_gray, ic, p) < T for ic in minkowski_colours]
-    minkowski_check = np.array([np.any(minkowski_red), np.any(minkowski_white), np.any(minkowski_blue_gray)])
+    minkowksi_identified = [minkowski_check(c, p, T) for c in minkowski_colours]
 
+    # minkowski_white = [minkowski(white, ic, p) < T for ic in minkowski_colours]
+    # minkowski_red = [minkowski(red, ic, p) < T for ic in minkowski_colours]
+    # minkowski_blue_gray = [minkowski(blue_gray, ic, p) < T for ic in minkowski_colours]
+    # minkowski_check = np.array([np.any(minkowski_red), np.any(minkowski_white), np.any(minkowski_blue_gray)])
+
+
+    # sus_high = np.array([black[1], dark_brown[1], light_brown[1]])
+    # sus_low = np.array([black[0], dark_brown[0], light_brown[0]])
+
+    # above_low = np.all(clustered_colours[None] >= sus_low[:, None], axis=2)
+    # below_high = np.all(clustered_colours[None] <= sus_high[:, None], axis=2)
+
+    # within_range = np.logical_and(above_low, below_high)
+    # check_ranged_colours = np.array(within_range.sum(axis=1) > 0.01)
+    range_identified_colours = [id_colour(c) for c in clustered_colours]
+    # check_colours = list(check_ranged_colours) + list(minkowski_check)
+    # identified_colours = [colour_list[i] for i, c in enumerate(check_colours) if c == True]
+    identified_colours = range_identified + minkowski_identified
+
+    return len(identified_colours), identified_colours
+
+
+def check_colour_range(colour, colour_range):
+    """ check if the colour is with the range """
+    lower, upper = color_range
+    return all(lower[i] <= colour[i] <= upper[i] for i in range(3))
+
+
+def id_colour(colour):
+    """ ID the colour based on it's hsv value """
     black = [[0.06, 0.27, 0.10], [39.91, 30.23, 22.10]]
     dark_brown = [[14.32, 6.85, 6.96], [47.57, 27.14, 46.81]]
     light_brown = [[47.94, 11.89, 19.86], [71.65, 44.81, 64.78]]
 
-    sus_high = np.array([black[1], dark_brown[1], light_brown[1]])
-    sus_low = np.array([black[0], dark_brown[0], light_brown[0]])
+    if check_colour_range(colour, black):
+        return "black"
+    elif check_colour_range(colour, dark_brown):
+        return "dark-brown"
+    elif check_colour_range(colour, light_brown):
+        return "light-brown"
 
-    above_low = np.all(clustered_colours[None] >= sus_low[:, None], axis=2)
-    below_high = np.all(clustered_colours[None] <= sus_high[:, None], axis=2)
 
-    within_range = np.logical_and(above_low, below_high)
-    check_ranged_colours = np.array(within_range.sum(axis=1) > 0.01)
+def check_minkowski(colour, p=3, T=0.5):
+    white = [100, 0, 0]
+    red = [54.29, 80.81, 69.89]
+    blue_gray = [50.28, -30.14, -11.96]
+    if minkowski_distance(white, colour, p) < T:
+        return "white"
+    elif minkowski_distance(red, colour, p) < T:
+        return "red"
+    elif minkowski_distance(red, colour, p) < T:
+        return "blue_gray"
 
-    check_colours = list(check_ranged_colours) + list(minkowski_check)
-    identified_colours = [colour_list[i] for i, c in enumerate(check_colours) if c == True]
-
-    print(colour_pct)
-
-    return len(identified_colours), identified_colours
 
     # I am here -- I have a list of 3 values, 1s or 0s, that represent whether the three ranged colours are present. I
     # want to return those colours, but I'm not sure how to index the colour_list with the ranged_colours variable.
@@ -121,48 +166,25 @@ def col_var(clustered_colours, colour_pct):
     # suspicious colour if within ranges (black, light/dark brown) or if distance between pixel
     # and single colour (red, blue-gray, white) is below threshold T
 
+def minkowski_distance(x, y, p):
+    return np.power(np.abs(x-y), p).sum() ** (1/p)
+
 
 def get_clusters(img, n_clusters):
     # if n_clusters is an array, we find and return the best clustering
     if isinstance(n_clusters, list):
-        sse = []
         for k in range(n_clusters[0], n_clusters[1]):
-            clt = KMeans(k)
-            clt.fit(img.reshape(-1, 3))
-            sse.append(clt.inertia_)
+            kmeans_model = KMeans(k)
+            kmeans_model.fit(img.reshape(-1, 3))
+            sse.append(kmeans_model.inertia_)
         knee = KneeLocator(
             range(n_clusters[0], n_clusters[1]), sse, curve="convex", direction="decreasing"
         )
-        clt = KMeans(knee.elbow)
+        kmeans_model = KMeans(knee.elbow)
     else:
-        clt = KMeans(n_clusters, n_init='auto')
+        kmeans_model = KMeans(n_clusters, n_init='auto')
 
-    clt.fit(img.reshape(-1, 3))
-    return clt
+    kmeans_model.fit(img.reshape(-1, 3))
+    return kmeans_model
 
 
-img_path = os.path.join(os.getcwd(), "..", "..", "images", "ISIC-database")
-os.chdir(img_path)
-counter = 0
-n_images = 1
-min_clusters = 2
-max_clusters = 7  # get 7 clusters, because we want 6 colours, and expect pure black to exist in the background.
-for dirname, _, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        sse = []
-        n_clusters = min_clusters
-        if filename.endswith(".JPG"):
-            # print(os.path.join(dirname, filename))
-            image = read_img(filename)
-            mean_value, mean_colour = get_mean(image)
-            # clt = get_clusters(image, n_clusters=[min_clusters, max_clusters])
-            clt = get_clusters(image, n_clusters=max_clusters)
-
-            cluster_pct = palette_perc(clt)
-            n_colours, colours = col_var(clt.cluster_centers_, cluster_pct)
-            print(colours)
-            show_images(image, palette_perc(clt, show_image=True))
-
-            counter += 1
-            if counter >= n_images:
-                break

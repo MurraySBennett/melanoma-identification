@@ -3,13 +3,17 @@ from os import path
 import pandas as pd
 import glob
 from pprint import pprint
+import concurrent.futures
+import cv2 as cv
+from time import perf_counter
 
-from minimise_dca import * 
-from image_processes import process_img, colour_cluster, my_clahe, otsu_segment, grabcut_segment, display
-from file_management import save_img
+from image_processes import process_img
+from file_management import save_img, read_img
 
-K = 6 # n clusters
-n_images = 1
+batch_size = (os.cpu_count()-1) * 10
+n_images = None # set to None if running all images- maybe do this on the HPC
+save_data = True
+
 ##### --> set paths and filenames
 home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
 paths = dict(
@@ -19,39 +23,38 @@ paths = dict(
     segmented=path.join(home_path, "images", "segmented", "images"),
     data=path.join(home_path, "images", "metadata")
     )
-image_paths = glob.glob(paths["images"] + "/*.JPG")
-image_ids = [i.split("/")[-1] for i in image_paths]
+image_paths = glob.glob(os.path.join(paths['images'], "*.JPG"))
+image_paths = sorted(image_paths)
+if n_images is not None:
+    image_paths = image_paths[:n_images]
 
-##### --> define functions
 
 def main():
-    data = pd.read_csv(paths["data"] + "/metadata.csv")
-    data["id_int"] = [i.split("_")[1] for i in data["isic_id"]]
-    data = data.sort_values(by=["id_int"], ascending=True).reset_index()
-    if n_images is not None:
-        data = data.head(n_images)
+    # data = pd.read_csv(paths["data"] + "/metadata.csv")
+    # data["id_int"] = [i.split("_")[1] for i in data["isic_id"]]
+    # data = data.sort_values(by=["id_int"], ascending=True).reset_index()
+    # if n_images is not None:
+        # data = data.head(n_images)
+    # img_labels = [path.join(paths['images'], i + '.png') for i in data['isic_id']]
+    # save_labels  = [path.join(paths['masks'], i + '.png') for i in data['isic_id']]
 
-    data["image_raw"] = [cv.imread(path.join(paths["images"], i + ".JPG")) for i in data["isic_id"]]
-    data["dca"] = [get_dca(i) for i in data["image_raw"]]
 
-    data["dca_rm"] = [paint_dca(image=data["dca"][i][0], mask=data["dca"][i][1], method='inpaint_ns') for i in range(len(data["image_raw"]))]
-    data["image_proc"] = [process_img(i) for i in data["dca_rm"]]
-    # data["image_masks"], data["contours"], data["contoured_image"] = map(list,
-    #         zip(*[segment(i) for i in
-    #     data["image_proc"]]))
-    # data["image_masked"] = [cv.bitwise_and(data["image_proc"][i], data["image_proc"][i],
-    #     mask=data["image_masks"][i].astype(np.uint8)) for i in
-    #     range(len(data["image_proc"]))]
-    # shape_factor = [get_shape_factor(c) for c in data["contours"]]
-    data["kmeans_img"] = [colour_cluster(i, n_clusters=K) for i in data["image_proc"]]
-    ###### adaptive histogram equalisation -- contrast limited (clahe)
-    data["enhanced"] = [my_clahe(i) for i in data["kmeans_img"]]
-    data["otsu"] = [otsu_segment(data["image_raw"][i], data["enhanced"][i]) for i in range(len(data["enhanced"]))]
-    data["grabcut"] = [grabcut_segment(data["image_raw"][i], data["enhanced"][i]) for i in range(len(data["enhanced"]))]
+    # Use ThreadPoolExecutor to read images in batches
+    with concurrent.futures.ThreadPoolExecutor() as io_executor:
+        for i in range(0, len(image_paths), batch_size):
+            start=perf_counter()
+            batch_paths = image_paths[i:i+batch_size]
+            batch_images = list(io_executor.map(read_img, batch_paths))
 
-    # [display( [data["image_raw"][i], data["image_proc"][i],  data["otsu"][i]], ["raw", "hair removal", "segmented"]) for i in range(len(data["image_raw"]))]
-    
-    [save_img(data["otsu"][i], paths["masks"], data["isic_id"][i]) for i in range(len(data["isic_id"]))]
+            # Use ProcessPoolExecutor to perform image processing on each batch of images
+            with concurrent.futures.ProcessPoolExecutor() as cpu_executor:
+                batch_masks = list(cpu_executor.map(process_img, batch_images))
+            
+            # Use ThreadPoolExecutor to save the segmented masks in parallel
+            batch_mask_paths = [os.path.join(paths['masks'], os.path.splitext(os.path.basename(p))[0] + ".png") for p in batch_paths]
+            io_executor.map(save_img, batch_masks, batch_mask_paths)
+            print(perf_counter()-start)
 
-if '__name__':
+
+if __name__ == '__main__':
     main()
