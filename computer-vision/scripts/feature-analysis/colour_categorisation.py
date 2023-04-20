@@ -1,22 +1,65 @@
-import os
-import pandas as pd
+# import os
 import numpy as np
 import cv2 as cv
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from collections import Counter
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(message)s')
+
+file_handler = logging.FileHandler('colours.txt')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+# logger.addHandler(stream_handler)
+
+# add headers
+logger.info(f'isic_id, identified, mask_pct, pct_dict, colour_dict') 
+
+
+def show(img, label):
+    cv.imshow(f'{label}', img)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    return
+
+def combine_imgmask(img_path, mask_path):
+    """ read img, read mask, return combined """
+    img_id = img_path.split('/')[-1]
+    try:
+        img = cv.imread(img_path)
+        mask = cv.imread(mask_path, -1)
+        # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        if img.shape[:2] != mask.shape[:2]:
+            # Resize or crop the mask to match the image size
+            # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
+            print("mask was resized")
+
+        masked = impose_mask(img, mask)
+        return [masked, img_id]
+    except Exception as e:
+        logger.exception(f"Error processing {img_path} and {mask_path}: {e}")
+        return None
 
 
 def show_images(img1, img2):
-    # img1 = cv.cvtColor(img1, cv.COLOR_LAB2RGB)
-    # img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-    f, ax = plt.subplots(1, 2, figsize=(5, 5))
-    ax[0].imshow(img1)
-    ax[1].imshow(img2)
-    ax[0].axis('off')
-    ax[1].axis('off')
-    f.tight_layout()
-    plt.show()
+    try:
+        f, ax = plt.subplots(1, 2, figsize=(5, 5))
+        ax[0].imshow(img1)
+        ax[1].imshow(img2)
+        ax[0].axis('off')
+        ax[1].axis('off')
+        f.tight_layout()
+        plt.show()
+    except:
+        logger.exception('Tried to show your images')
 
 
 def get_mean(img):
@@ -43,7 +86,6 @@ def combine_imgmask(img_path, mask_path):
         print(f"Error processing {img_path} and {mask_path}: {e}")
         return None
 
-
 def impose_mask(img, mask):
     """ slap mask onto image """
     masked = cv.bitwise_and(img, img, mask=mask.astype(np.uint8))
@@ -59,54 +101,63 @@ def palette_perc(k_cluster, show_image=False):
     counter = Counter(k_cluster.labels_)
     perc = {}
     for i in counter:
-        perc[i] = np.round(counter[i] / n_pixels, 2)
+        perc[i] = np.round(counter[i] / n_pixels, 4)
     perc = dict(sorted(perc.items()))
 
-    # percentages of each colour - you'll need this for checking the proportion of colour in the image
-    # print(perc)
-    # print(k_cluster.cluster_centers_)
-
-    step = 0
-
-    for idx, centers in enumerate(k_cluster.cluster_centers_):
-        palette[:, step:int(step + perc[idx] * width + 1), :] = centers
-        step += int(perc[idx] * width + 1)
     if show_image:
+        step = 0
+        for idx, centers in enumerate(k_cluster.cluster_centers_):
+            palette[:, step:int(step + perc[idx] * width + 1), :] = centers
+            step += int(perc[idx] * width + 1)
         return palette
     else:
         return perc
 
 
 # https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0234352#sec002
-def col_var(clustered_colours, colour_pct):
-    colour_list = ["black", "dark-brown", "light-brown", "red", "white", "blue-gray"]
-    black = [0, 0, 0]
-    p = 3
-    T = round(minkowski(black, white, p) / 2)
+def get_colours(img):
+    label = img[1]
+    img = img[0].astype('float32') / 255 
+    img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
+    clusters = get_clusters(img)
+    colour_pct = palette_perc(clusters)
+    
+    clustered_colours = np.round(clusters.cluster_centers_,2)
+    
+    # logger.info(f'{clustered_colours}')
 
-    minkowski_colours = [colour for idx, colour in enumerate(clustered_colours) if colour_pct[idx] >= 0.05]
-    minkowksi_identified = [minkowski_check(c, p, T) for c in minkowski_colours]
-
-    # minkowski_white = [minkowski(white, ic, p) < T for ic in minkowski_colours]
-    # minkowski_red = [minkowski(red, ic, p) < T for ic in minkowski_colours]
-    # minkowski_blue_gray = [minkowski(blue_gray, ic, p) < T for ic in minkowski_colours]
-    # minkowski_check = np.array([np.any(minkowski_red), np.any(minkowski_white), np.any(minkowski_blue_gray)])
-
-
-    # sus_high = np.array([black[1], dark_brown[1], light_brown[1]])
-    # sus_low = np.array([black[0], dark_brown[0], light_brown[0]])
-
-    # above_low = np.all(clustered_colours[None] >= sus_low[:, None], axis=2)
-    # below_high = np.all(clustered_colours[None] <= sus_high[:, None], axis=2)
-
-    # within_range = np.logical_and(above_low, below_high)
-    # check_ranged_colours = np.array(within_range.sum(axis=1) > 0.01)
+    black_index = np.where(np.all(np.round(clustered_colours) == [0, 0, 0], axis=1))[0][0]
+    clustered_colours = np.delete(clustered_colours, black_index,axis=0)
+    mask_pct = 1 - colour_pct[black_index]
+    del colour_pct[black_index]
+    total_pct = sum(colour_pct.values()) 
+    for key in colour_pct:
+        colour_pct[key] = np.round((colour_pct[key] / total_pct) * 100)
+    new_pct = {}
+    save_clr={}
+    new_key = 0
+    for old_key in sorted(colour_pct.keys()):
+        new_pct[new_key] = colour_pct[old_key]
+        # save_clr[new_key] = clustered_colours[new_key].tolist()
+        save_clr[new_key] = list(np.round(clustered_colours[new_key],2))
+        new_key += 1
+    colour_pct = new_pct
+    del new_pct
+    # colour_list = ["black", "dark-brown", "light-brown", "red", "white", "blue-gray"]
+    # black = [0, 0, 0]
+    # white = [100, 0, 0]
+    # T = round(minkowski(black, white, p) / 2)
+    # only use colours that constitute more than 5% of the image.
+    minkowski_colours = [colour for idx, colour in enumerate(clustered_colours) if colour_pct[idx] >= 5]
+    minkowski_identified = [check_minkowski(c, p=3, T=50) for c in minkowski_colours]
+    
     range_identified_colours = [id_colour(c) for c in clustered_colours]
-    # check_colours = list(check_ranged_colours) + list(minkowski_check)
-    # identified_colours = [colour_list[i] for i, c in enumerate(check_colours) if c == True]
-    identified_colours = range_identified + minkowski_identified
-
-    return len(identified_colours), identified_colours
+    # logger.info(range_identified_colours)
+    identified_colours = range_identified_colours + minkowski_identified
+    identified_colours = list(set([c for sublists in identified_colours for c in sublists if c is not None]))
+    # identified_colours = [c for c in identified_colours if c is not None]
+    logger.info(f'{label},{identified_colours}, {mask_pct}, {colour_pct}, {save_clr}')
+    return identified_colours
 
 
 def check_colour_range(colour, colour_range):
@@ -120,55 +171,47 @@ def id_colour(colour):
     black = [[0.06, 0.27, 0.10], [39.91, 30.23, 22.10]]
     dark_brown = [[14.32, 6.85, 6.96], [47.57, 27.14, 46.81]]
     light_brown = [[47.94, 11.89, 19.86], [71.65, 44.81, 64.78]]
-
+    colours = [None]
     if check_colour_range(colour, black):
-        return "black"
-    elif check_colour_range(colour, dark_brown):
-        return "dark-brown"
-    elif check_colour_range(colour, light_brown):
-        return "light-brown"
+        colours.append("black")
+    if check_colour_range(colour, dark_brown):
+        colours.append("dark-brown")
+    if check_colour_range(colour, light_brown):
+        colours.append("light-brown")
+    return colours
 
-
-def check_minkowski(colour, p=3, T=0.5):
+def check_minkowski(colour, p=3, T=50):
+    black = [0, 0, 0]
     white = [100, 0, 0]
     red = [54.29, 80.81, 69.89]
     blue_gray = [50.28, -30.14, -11.96]
+    colours = [None]
+    T = np.round(minkowski_distance(black, white, p) / 2)
+    # minkowski_white = minkowski_distance(white, colour, p)
+    # mink_red = minkowski_distance(red, colour, p)
+    # mink_bg = minkowski_distance(blue_gray, colour, p)
+    # logger.info(f'colour: {colour}, threshold: {t}, white: {minkowski_white}, red: {mink_red}, blue-gray: {mink_bg}')
     if minkowski_distance(white, colour, p) < T:
-        return "white"
-    elif minkowski_distance(red, colour, p) < T:
-        return "red"
-    elif minkowski_distance(blue_gray, colour, p) < T:
-        return "blue_gray"
+        colours.append("white")
+    if minkowski_distance(red, colour, p) < T:
+        colours.append("red")
+    if minkowski_distance(blue_gray, colour, p) < T:
+        colours.append("blue-gray")
+    return colours
 
-
-    # I am here -- I have a list of 3 values, 1s or 0s, that represent whether the three ranged colours are present. I
-    # want to return those colours, but I'm not sure how to index the colour_list with the ranged_colours variable.
-    # once you figure that, the next job is to determine whether the white, red, and blue-grey are less than 50
-    # minkowskis of each single_colour, and the proportion of that colour is greater than 5% of the lesion.
-
-    # upon re-reading, I think they want to check every pixel of the lesion for the ranged colours. If that colour
-    # exists **at all**, even 1 pixel, then it is 'present' in the lesion. Hold the phone. THey do a k-means analysis
-    # and convert the pixels to the average of the cluster then check those values (essentially what you do above).
-
-    # https://stackoverflow.com/questions/67276643/how-to-find-all-pixel-values-from-a-certain-range
-    # above_low = np.all(img[None] >= sus_low[:, None, None], axis=3)  # .sum(axis=(1, 2))
-    # below_high = np.all(img[None] <= sus_high[:, None, None], axis=3)
-    # within_range = above_low + below_high
-    # gives num pixels within range
-    # counts = within_range.sum(axis=(1, 2))
-
-    # the above is useful for counting the proportion of pixels for each colour.
-    # You need to know if the clustered colour is within the range. Which means
-    # you don't need to survey the entire image, just the colour list.
-
-    # suspicious colour if within ranges (black, light/dark brown) or if distance between pixel
-    # and single colour (red, blue-gray, white) is below threshold T
 
 def minkowski_distance(x, y, p):
-    return np.power(np.abs(x-y), p).sum() ** (1/p)
+    """ return m-d for lab colour space values """
+    lab_color1 = np.array(x)
+    lab_color2 = np.array(y)
+    diff = lab_color1 - lab_color2
+    diff_abs = np.abs(diff)
+    minkowski_dist = np.sum(diff_abs**p)**(1/p)
+    return minkowski_dist
+    # return np.power(np.abs(x-y), p).sum() ** (1/p)
 
 
-def get_clusters(img, n_clusters):
+def get_clusters(img, n_clusters=7):
     # if n_clusters is an array, we find and return the best clustering
     if isinstance(n_clusters, list):
         for k in range(n_clusters[0], n_clusters[1]):
@@ -181,7 +224,6 @@ def get_clusters(img, n_clusters):
         kmeans_model = KMeans(knee.elbow)
     else:
         kmeans_model = KMeans(n_clusters, n_init='auto')
-
     kmeans_model.fit(img.reshape(-1, 3))
     return kmeans_model
 

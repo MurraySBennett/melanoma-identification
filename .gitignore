@@ -1,4 +1,4 @@
-# Default ignored files
+# Default ignored file
 .jpg
 .JPG
 *.JPG
@@ -9,3 +9,13 @@ writing/General Recognition Theory for Enhanced Melanoma Identification.docx
 .Rproj.user
 *.pyc
 venv/
+*.pickle
+*.xlsx
+.venv
+.samvenv
+*.log
+*.pth
+*.pb
+*.Rhistory
+*.csv
+
