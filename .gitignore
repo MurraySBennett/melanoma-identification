@@ -8,3 +8,4 @@ writing/General Recognition Theory for Enhanced Melanoma Identification.docx
 *.png
 .Rproj.user
 *.pyc
+venv/

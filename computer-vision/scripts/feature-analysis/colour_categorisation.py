@@ -28,8 +28,6 @@ def get_mean(img):
 
 def combine_imgmask(img_path, mask_path):
     """ read img, read mask, return combined """
-    img_id = split(img_path, '/', 
-    print(img_id)
     try:
         img = cv.imread(img_path)
         mask = cv.imread(mask_path, -1)
@@ -113,7 +111,7 @@ def col_var(clustered_colours, colour_pct):
 
 def check_colour_range(colour, colour_range):
     """ check if the colour is with the range """
-    lower, upper = color_range
+    lower, upper = colour_range
     return all(lower[i] <= colour[i] <= upper[i] for i in range(3))
 
 
@@ -139,7 +137,7 @@ def check_minkowski(colour, p=3, T=0.5):
         return "white"
     elif minkowski_distance(red, colour, p) < T:
         return "red"
-    elif minkowski_distance(red, colour, p) < T:
+    elif minkowski_distance(blue_gray, colour, p) < T:
         return "blue_gray"
 
 
@@ -187,4 +185,28 @@ def get_clusters(img, n_clusters):
     kmeans_model.fit(img.reshape(-1, 3))
     return kmeans_model
 
+img_path = os.path.join(os.getcwd(), "..", "..", "images", "ISIC-database")
+os.chdir(img_path)
+counter = 0
+n_images = 1
+min_clusters = 2
+max_clusters = 7  # get 7 clusters, because we want 6 colours, and expect pure black to exist in the background.
+for dirname, _, filenames in os.walk(os.getcwd()):
+    for filename in filenames:
+        sse = []
+        n_clusters = min_clusters
+        if filename.endswith(".JPG"):
+            # print(os.path.join(dirname, filename))
+            image = read_img(filename)
+            mean_value, mean_colour = get_mean(image)
+            # clt = get_clusters(image, n_clusters=[min_clusters, max_clusters])
+            clt = get_clusters(image, n_clusters=max_clusters)
 
+            cluster_pct = palette_perc(clt)
+            n_colours, colours = col_var(clt.cluster_centers_, cluster_pct)
+            print(colours)
+            show_images(image, palette_perc(clt, show_image=True))
+
+            counter += 1
+            if counter >= n_images:
+                break

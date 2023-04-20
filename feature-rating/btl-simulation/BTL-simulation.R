@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 library(tictoc)
 library(rstan)
 library(igraph)
@@ -7,7 +9,7 @@ rstan_options(auto_write=TRUE) # stops rstan recompiling unchanged stan programs
 no_cores <- availableCores() - 1
 options(mc.cores = parallel::detectCores())
 
-setwd("C:/Users/qlm573/melanoma-identification/feature-rating/btl-simulation")
+# setwd("C:/Users/qlm573/melanoma-identification/feature-rating/btl-simulation")
 
 save_data = TRUE
 
@@ -215,20 +217,9 @@ for (t in seq_along(n_trials)){
 toc()
 
 if (save_data){
-  write.csv(sim_data, paste('.\\simulation-data\\simulation_p', min_participants, '-', max_participants, '_images', min_players, '-', max_players, '.csv',sep=""), row.names=FALSE)
-}
+  write.csv(sim_data, paste(min_participants, '-', max_participants, '_images', min_players, '-', max_players, '.csv',sep=""), row.names=FALSE)
+
 
 View(sim_data)
-
-
-
-
-
-
-
-
-
-
-
 
 
