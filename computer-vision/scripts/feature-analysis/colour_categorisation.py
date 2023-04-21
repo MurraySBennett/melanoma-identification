@@ -69,22 +69,22 @@ def get_mean(img):
     return img_mean, img_tmp
 
 
-def combine_imgmask(img_path, mask_path):
-    """ read img, read mask, return combined """
-    try:
-        img = cv.imread(img_path)
-        mask = cv.imread(mask_path, -1)
-        img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-        print(img.shape, mask.shape)
-        if img.shape[:2] != mask.shape[:2]:
-            # Resize or crop the mask to match the image size
-            print("incompatible image and mask sizes")
-            # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
-        masked = impose_mask(img, mask)
-        return [masked, img_id]
-    except Exception as e:
-        print(f"Error processing {img_path} and {mask_path}: {e}")
-        return None
+# def combine_imgmask(img_path, mask_path):
+#     """ read img, read mask, return combined """
+#     try:
+#         img = cv.imread(img_path)
+#         mask = cv.imread(mask_path, -1)
+#         img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+#         print(img.shape, mask.shape)
+#         if img.shape[:2] != mask.shape[:2]:
+#             # Resize or crop the mask to match the image size
+#             print("incompatible image and mask sizes")
+#             # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
+#         masked = impose_mask(img, mask)
+#         return [masked, img_id]
+#     except Exception as e:
+#         print(f"Error processing {img_path} and {mask_path}: {e}")
+#         return None
 
 def impose_mask(img, mask):
     """ slap mask onto image """
