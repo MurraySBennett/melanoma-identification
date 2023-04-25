@@ -21,7 +21,7 @@ logger.addHandler(file_handler)
 # logger.addHandler(stream_handler)
 
 # add headers
-logger.info(f'isic_id, identified, mask_pct, pct_dict, colour_dict') 
+logger.info(f'isic_id   identified  mask_pct    pct_dict    colour_dict') 
 
 
 def show(img, label):
@@ -30,23 +30,23 @@ def show(img, label):
     cv.destroyAllWindows()
     return
 
-def combine_imgmask(img_path, mask_path):
-    """ read img, read mask, return combined """
-    img_id = img_path.split('/')[-1]
-    try:
-        img = cv.imread(img_path)
-        mask = cv.imread(mask_path, -1)
-        # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        if img.shape[:2] != mask.shape[:2]:
-            # Resize or crop the mask to match the image size
-            # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
-            print("mask was resized")
+# def combine_imgmask(img_path, mask_path):
+#     """ read img, read mask, return combined """
+#     img_id = img_path.split('/')[-1]
+#     try:
+#         img = cv.imread(img_path)
+#         mask = cv.imread(mask_path, -1)
+#         # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+#         if img.shape[:2] != mask.shape[:2]:
+#             # Resize or crop the mask to match the image size
+#             # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
+#             print("mask was resized")
 
-        masked = impose_mask(img, mask)
-        return [masked, img_id]
-    except Exception as e:
-        logger.exception(f"Error processing {img_path} and {mask_path}: {e}")
-        return None
+#         masked = impose_mask(img, mask)
+#         return [masked, img_id]
+#     except Exception as e:
+        # logger.exception(f"Error processing {img_path} and {mask_path}: {e}")
+        # return None
 
 
 def show_images(img1, img2):
@@ -69,22 +69,23 @@ def get_mean(img):
     return img_mean, img_tmp
 
 
-# def combine_imgmask(img_path, mask_path):
-#     """ read img, read mask, return combined """
-#     try:
-#         img = cv.imread(img_path)
-#         mask = cv.imread(mask_path, -1)
-#         img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-#         print(img.shape, mask.shape)
-#         if img.shape[:2] != mask.shape[:2]:
-#             # Resize or crop the mask to match the image size
-#             print("incompatible image and mask sizes")
-#             # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
-#         masked = impose_mask(img, mask)
-#         return [masked, img_id]
-#     except Exception as e:
-#         print(f"Error processing {img_path} and {mask_path}: {e}")
-#         return None
+def combine_imgmask(img_path, mask_path):
+    """ read img, read mask, return combined """
+    img_id = img_path.split('/')[-1]
+    try:
+        img = cv.imread(img_path)
+        mask = cv.imread(mask_path, -1)
+        img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+        # print(img.shape, mask.shape)
+        if img.shape[:2] != mask.shape[:2]:
+            # Resize or crop the mask to match the image size
+            print("incompatible image and mask sizes")
+            # mask = cv.resize(mask, img.shape[:2], interpolation=cv.INTER_NEAREST)
+        masked = impose_mask(img, mask)
+        return [masked, img_id]
+    except Exception as e:
+        print(f"Error processing {img_path} and {mask_path}: {e}")
+        return None
 
 def impose_mask(img, mask):
     """ slap mask onto image """
@@ -117,6 +118,7 @@ def palette_perc(k_cluster, show_image=False):
 # https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0234352#sec002
 def get_colours(img):
     label = img[1]
+    label = label.split('.')[0]
     img = img[0].astype('float32') / 255 
     img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
     clusters = get_clusters(img)
@@ -156,7 +158,7 @@ def get_colours(img):
     identified_colours = range_identified_colours + minkowski_identified
     identified_colours = list(set([c for sublists in identified_colours for c in sublists if c is not None]))
     # identified_colours = [c for c in identified_colours if c is not None]
-    logger.info(f'{label},{identified_colours}, {mask_pct}, {colour_pct}, {save_clr}')
+    logger.info(f'{label}   {identified_colours}    {mask_pct}  {colour_pct}    {save_clr}')
     return identified_colours
 
 
@@ -227,28 +229,3 @@ def get_clusters(img, n_clusters=7):
     kmeans_model.fit(img.reshape(-1, 3))
     return kmeans_model
 
-img_path = os.path.join(os.getcwd(), "..", "..", "images", "ISIC-database")
-os.chdir(img_path)
-counter = 0
-n_images = 1
-min_clusters = 2
-max_clusters = 7  # get 7 clusters, because we want 6 colours, and expect pure black to exist in the background.
-for dirname, _, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        sse = []
-        n_clusters = min_clusters
-        if filename.endswith(".JPG"):
-            # print(os.path.join(dirname, filename))
-            image = read_img(filename)
-            mean_value, mean_colour = get_mean(image)
-            # clt = get_clusters(image, n_clusters=[min_clusters, max_clusters])
-            clt = get_clusters(image, n_clusters=max_clusters)
-
-            cluster_pct = palette_perc(clt)
-            n_colours, colours = col_var(clt.cluster_centers_, cluster_pct)
-            print(colours)
-            show_images(image, palette_perc(clt, show_image=True))
-
-            counter += 1
-            if counter >= n_images:
-                break

@@ -22,7 +22,8 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
-batch_size = (os.cpu_count()-1) * 2**4
+
+batch_size = (os.cpu_count()-1) * 2**6
 n_images = None
 save_data = False
 min_clusters = 2
