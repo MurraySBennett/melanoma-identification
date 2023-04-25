@@ -167,7 +167,7 @@ def measure_shape(mask):
         x_sym, y_sym = get_asymmetry(mask, contour)
         compact_factor = get_shape_factor(contour)
         ap_ratio = AP_ratio(contour)
-        logger.info(f'{label},{x_sym},{y_sym},{compact_factor},{ap_ratio}')
+        logger.info(f'{label}   {x_sym} {y_sym} {compact_factor}    {ap_ratio}')
         shape_values = {'id':label, 'x_sym':x_sym, 'y_sym':y_sym, 'compact':compact_factor,'ap_ratio': ap_ratio}
     
     except:
@@ -211,7 +211,7 @@ def main():
         mask_paths = mask_paths[:n_images]
         counter = 0
     
-    logger.info('id,x_sym,y_sym,compact,ap_ratio')
+    logger.info('id x_sym   y_sym   compact ap_ratio')
 
     with concurrent.futures.ThreadPoolExecutor() as io_exec:
         for i in range(0, len(mask_paths), batch_size):
