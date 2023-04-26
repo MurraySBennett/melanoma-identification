@@ -7,7 +7,6 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from time import perf_counter
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
