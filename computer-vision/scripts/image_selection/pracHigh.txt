@@ -1,0 +1,10 @@
+window.prac_high = [
+"isic_id.JPG", 
+"ISIC_0460240.JPG", 
+"ISIC_4679428.JPG", 
+"ISIC_5199497.JPG", 
+"ISIC_8575776.JPG", 
+"ISIC_9238366.JPG", 
+"ISIC_9959593.JPG" 
+];
+

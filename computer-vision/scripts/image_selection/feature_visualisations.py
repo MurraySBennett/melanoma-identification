@@ -84,7 +84,7 @@ def main(target_n=100, save_data=False):
 
     x = np.array(shape_data['sorted_id'])
     y = np.array(shape_data['compact'])
-    melanoma_idx = np.where(shape_data['malignant']==1)
+    melanoma_idx = np.where(shape_data['malignant']==1)[0]
 
     sample_values, sample_indices = sample_data(y, n=target_n, sample_indices=melanoma_idx)
     sampled_ids = shape_data['isic_id'][sample_indices]
