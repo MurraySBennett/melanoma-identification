@@ -1,5 +1,88 @@
 {
   "components": {
+    "1": {
+      "id": "1",
+      "type": "lab.html.Screen",
+      "files": [
+        {
+          "localPath": "8.JPG",
+          "poolPath": "embedded/c9902cebdc103a8ae928bac780552d4acc7eb69280cda897b48dcae717bca341.JPG"
+        },
+        {
+          "localPath": "0.JPG",
+          "poolPath": "embedded/829cb62e8ae0d628100407f2a2a50e98ed4b65155e8f1f6d345ce1fcf0b4115a.JPG"
+        },
+        {
+          "localPath": "1.JPG",
+          "poolPath": "embedded/8d3cae9f08e28e88748d7a0fde8b7b9585fc9cf2992fab369f65c79c01933754.JPG"
+        },
+        {
+          "localPath": "2.JPG",
+          "poolPath": "embedded/8a51d2c36fea65fa95fc8130bd930c886d9709076c8e85c37465a06fa3767e2d.JPG"
+        },
+        {
+          "localPath": "3.JPG",
+          "poolPath": "embedded/71eae3775faecb0f1570bfb305c665bd513378bfe47c451e43ed97fce882586d.JPG"
+        },
+        {
+          "localPath": "4.JPG",
+          "poolPath": "embedded/a2bf9b45afdcdb2ee5aff6df7e400b5ca275760e0f6275dc51fb9e008ee71cfb.JPG"
+        },
+        {
+          "localPath": "5.JPG",
+          "poolPath": "embedded/587b84f7a22bb4383a52bd309c36f06c0093c7440ce6952cb7fb9009bf628b74.JPG"
+        },
+        {
+          "localPath": "6.JPG",
+          "poolPath": "embedded/342c5f996b8b413e7c68dfd9a71776d32688492323fa397260dd3512922fdd90.JPG"
+        },
+        {
+          "localPath": "7.JPG",
+          "poolPath": "embedded/944eda56cab9031b0208bb06994bba29a703a25013e56755fac051debe418a1d.JPG"
+        }
+      ],
+      "responses": [
+        {
+          "label": "0",
+          "event": "keypress",
+          "target": "",
+          "filter": "z"
+        },
+        {
+          "label": "1",
+          "event": "keypress",
+          "filter": "m"
+        },
+        {
+          "label": "0",
+          "event": "keypress",
+          "filter": "Z"
+        },
+        {
+          "filter": "M",
+          "label": "1"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "selection_duration",
+          "value": "500",
+          "type": "string"
+        }
+      ],
+      "messageHandlers": [
+        {
+          "title": "",
+          "message": "run",
+          "code": "window.trials_per_block = this.parameters.total_trials / this.parameters.total_blocks;\r\n\r\nif ( ! window.blockNo)\r\n  window.blockNo = 1;\r\n\r\nif ( ! window.trialNo)\r\n  window.trialNo = 1;\r\nelse\r\n  window.trialNo++;\r\n\r\nthis.parameters.blockNo = window.blockNo;\r\nthis.parameters.trialNo = window.trialNo;\r\nwindow.total_blocks = this.parameters.total_blocks;\r\n\r\nif (window.trialNo === window.trials_per_block) {\r\n  window.trialNo = 0;\r\n  window.blockNo++;\r\n  window.takeBreak = true;\r\n  if (window.blockNo === window.total_blocks + 1 && !this.parameters.practice){\r\n    window.endExperiment = true;\r\n  }\r\n}\r\nelse {\r\n  window.takeBreak = false;\r\n  window.endExperiment = false;\r\n}\r\n\r\nif (this.parameters.practice){\r\n  this.parameters.img_left = window.practice_stimuli[window.trialNo][0];\r\n  this.parameters.img_right = window.practice_stimuli[window.trialNo][1];\r\n} else {\r\n  // copy the stimulus list so you can remove the first random choice, \r\n  // thereby ensuring you don't pick doubles.\r\n  let tmp_list = window.stimuli.map((x) => x);\r\n  this.parameters.img_left = this.random.choice(tmp_list);\r\n  tmp_list.splice(tmp_list.indexOf(this.parameters.img_left), 1);\r\n  this.parameters.img_right=this.random.choice(tmp_list);\r\n}\r\n\r\n// window.new_stim = [`${ this.files[this.parameters.img_left] }`, `${ this.files[this.parameters.img_right] }`];\r\nwindow.new_stim = [window.img_root + this.parameters.img_left, window.img_root + this.parameters.img_right];\r\n\r\nfunction changeImage(element, path) {\r\n  element.src = path;\r\n}\r\n\r\n// For image selection feedback\r\nlet display_left = document.getElementById('display_left');\r\nlet display_right= document.getElementById('display_right');\r\n\r\n\r\nlet selections = {\r\n  '0': display_left,\r\n  '1': display_right,\r\n}\r\n\r\nlet trial_stimuli = [this.parameters.img_left, this.parameters.img_right];\r\n\r\n// allow a moment for image load time, thus 'ensuring' perception of equal presentation times\r\nlet onset_stimulus = 1500; //ms\r\nlet onset_cue = 500;\r\nlet load_timer = onset_stimulus;\r\nlet fps = 60;\r\nlet only_once_stim = 1;\r\nlet only_once_cue = 1;\r\n\r\nrun_trial = () => {\r\n  // load the images\r\n  if (load_timer != onset_stimulus && only_once_stim===1){\r\n    changeImage(display_left, window.new_stim[0]);\r\n    changeImage(display_right, window.new_stim[1]);\r\n  }\r\n  // reveal the cue with 'onset_cue' time remaining before the stimulus reveal\r\n  if (load_timer <= onset_cue && only_once_cue===1){\r\n    cue_display.className += ' shown';\r\n    only_once_cue=0;\r\n  }\r\n  if (load_timer <= 0 && only_once_stim===1){\r\n    cue_display.className = 'cue';\r\n    display_left.className += ' shown';\r\n    display_right.className += ' shown'\r\n    only_once_stim = 0;\r\n    this.parameters.img_reveal = this.parameters.timestamp;\r\n  }\r\n  load_timer -= 1/fps * 1000; // a better man would calculate time since last frame and substract that.\r\n}\r\n\r\n// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;\r\n\r\n// override respond()\r\nthis._respond = this.respond;\r\nthis.respond = (response=null, timestamp=undefined) => {\r\n  // response === this.parameters.response;\r\n  // this.parameters.correct = (response === this.parameters.correctResponse);\r\n  // only accept responses once the stimulus has been revealed\r\n  if (only_once_stim===0){\r\n    let wait = this.parameters.selection_duration;\r\n    selections[response].className += ' border';\r\n    // if (this.parameters.practice) {\r\n    //     wait = this.parameters.practiceFeedbackDuration;\r\n    //     selections[this.parameters.correctResponse].className += ' shown';\r\n    // }\r\n    this.parameters.winner = trial_stimuli[response];\r\n    this.parameters.loser  = trial_stimuli[Math.abs(response - 1)]\r\n    \r\n    setTimeout(() => {\r\n      this._respond(response, timestamp);\r\n    }, wait);\r\n  } else {\r\n    \r\n  }\r\n}\r\n\r\nlet iid = setInterval(run_trial, 1/fps*1000);\r\nlet end = (reason) => {\r\n  clearInterval(iid)\r\n  return this.originalEnd(reason)\r\n}\r\nthis.originalEnd = this.end\r\nthis.end = end\r\n"
+        }
+      ],
+      "title": "trial",
+      "_tab": "Scripts",
+      "content": "<!-- CSS for these divs and imgs are managed via the settings button in the top left corner of labjs -->\r\n<main class=\"content-horizontal-center content-vertical-center\">\r\n  <div id=\"container\">\r\n    <!-- <img src=${ this.files[this.parameters.img_left]} id=\"display_left\" class=\"display\"/>   -->\r\n    <img id=\"display_left\"  class=\"display\" />\r\n    <p id=\"cue_display\" class=\"cue\" style=\"font-size: 40px\">+</p>\r\n    <img id=\"display_right\" class=\"display\" />\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p> \r\n</footer>",
+      "timeout": "10000",
+      "tardy": false
+    },
     "6": {
       "id": "6",
       "type": "lab.html.Screen",
@@ -21,7 +104,7 @@
         {
           "title": "",
           "message": "run",
-          "code": "let conditions = [\"irregular\", \"consistent\", \"colourful\", \"uniform\"];\r\nthis.parameters.condition = this.random.choice(conditions)\r\nconsole.log(this.parameters.condition)\r\n\r\nif (this.parameters.condition === conditions[0]){\r\n  var condition_instruction1 = \"You will be presented with two images of skin lesions throughout this experiment. Your task is to select which of the two lesions has the <strong>more irregular border</strong>.\"\r\n  var condition_instruction2 = \"Images will be presented side-by-side on each trial. Please select the lesion with the <strong>more irregular border</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the irregularity between borders is high, followed by some trials where irregularity is low. However, throughout the experiment, please keep in mind that, in some cases, there is no <em>right</em> answer.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more irregular border</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition === conditions[1]){\r\n  var condition_instruction1 = \"You will be presented with two images of skin lesions throughout this experiment. Your task is to select which of the two lesions has the <strong>more consistent border</strong>.\"\r\n  var condition_instruction2 = \"Images will be presented side-by-side on each trial. Please select the lesion with the <strong>more consistent border</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the consistency between borders is high, followed by some trials where border consistency is low. However, throughout the experiment, please keep in mind that, in some cases, there is no <em>right</em> answer.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more consistent border</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition == conditions[2]){\r\n  var condition_instruction1 = \"You will be presented with two images of skin lesions throughout this experiment. Your task is to select which of the two lesions has the <strong>more colour variation</strong>.\"\r\n  var condition_instruction2 = \"Images will be presented side-by-side on each trial. Please select the lesion with the <strong>more colour variation</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the difference in colour variation between lesions is high, followed by some trials where colour variation is similar. However, throughout the experiment, please keep in mind that, in some cases, there is no <em>right</em> answer.\"\r\n  window.foot_instruction = \"Which lesion has <strong>more colour variation</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition == conditions[3]){\r\n  var condition_instruction1 = \"You will be presented with two images of skin lesions throughout this experiment. Your task is to select which of the two lesions has the <strong>more uniform colour</strong>.\"\r\n  var condition_instruction2 = \"Images will be presented side-by-side on each trial. Please select the lesion with the <strong>more uniform colour</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the difference in colour uniformity is high, followed by some trials where colour uniformity is similar. However, throughout the experiment, please keep in mind that, in some cases, there is no <em>right</em> answer.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more uniform colour</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n}\r\n\r\n\r\ndocument.getElementById('condition_instruction1').innerHTML = condition_instruction1;\r\ndocument.getElementById('condition_instruction2').innerHTML = condition_instruction2;\r\ndocument.getElementById('condition_instruction3').innerHTML = condition_instruction3;\r\n\r\n\r\n"
+          "code": "let conditions = [\"irregular\", \"regular\"];//, \"colourful\", \"uniform\"];\r\nthis.parameters.condition = this.random.choice(conditions)\r\nconsole.log(this.parameters.condition)\r\n\r\nif (this.parameters.condition === conditions[0]){\r\n  var condition_instruction1 = \"During this experiment, you will see two pictures of skin lesions. Skin lesions are areas that are not like the normal skin around them, like a mole or freckle. Skin lesions are common, but some can be harmful. To find out if a skin lesion is risky, we need to look at specific features of the lesion. Your task is to select which of the two lesions has the <strong>more irregular border</strong>. An irregular border is uneven, or inconsistent.\"\r\n  var condition_instruction2 = \"Two images will be presented side-by-side on each trial for up to 10 seconds. Use your keyboard to select the lesion with the <strong>more irregular border</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the irregularity between borders is high, followed by some trials where irregularity is low. However, throughout the experiment, please keep in mind that the difference is not always clear.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more irregular border</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition === conditions[1]){\r\n  var condition_instruction1 = \"During this experiment, you will see two pictures of skin lesions. Skin lesions are areas that are not like the normal skin around them, like a mole or freckle. Skin lesions are common, but some can be harmful. To find out if a skin lesion is risky, we need to look at specific features of the lesion. Your task is to select which of the two lesions has the <strong>more regular border</strong>. A regular border is even, or consistent.\"\r\n  var condition_instruction2 = \"Two images will be presented side-by-side on each trial for up to 10 seconds. Use your keyboard to select the lesion with the <strong>more regular border</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the consistency between borders is high, followed by some trials where border consistency is low. However, throughout the experiment, please keep in mind that the difference is not always clear.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more regular border</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition == conditions[2]){\r\n  var condition_instruction1 = \"During this experiment, you will see two pictures of skin lesions. Skin lesions are areas that are not like the normal skin around them, like a mole or freckle. Skin lesions are common, but some can be harmful. To find out if a skin lesion is risky, we need to look at specific features of the lesion. Your task is to select which of the two lesions has the <strong>more colour variation</strong>.\"\r\n  var condition_instruction2 = \"Two images will be presented side-by-side on each trial for up to 10 seconds. Use your keyboard to select the lesion with the <strong>more colour variation</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the difference in colour variation between lesions is high, followed by some trials where colour variation is similar. However, throughout the experiment, please keep in mind that the difference is not always clear.\"\r\n  window.foot_instruction = \"Which lesion has <strong>more colour variation</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n} else if (this.parameters.condition == conditions[3]){\r\n  var condition_instruction1 = \"During this experiment, you will see two pictures of skin lesions. Skin lesions are areas that are not like the normal skin around them, like a mole or freckle. Skin lesions are common, but some can be harmful. To find out if a skin lesion is risky, we need to look at specific features of the lesion. Your task is to select which of the two lesions has the <strong>more uniform colour</strong>.\"\r\n  var condition_instruction2 = \"Two images will be presented side-by-side on each trial for up to 10 seconds. Use your keyboard to select the lesion with the <strong>more uniform colour</strong> by pressing:\"\r\n  var condition_instruction3 = \"You will now be presented with a brief set of practice trials. The initial trials will use images where the difference in colour uniformity is high, followed by some trials where colour uniformity is similar. However, throughout the experiment, please keep in mind that the difference is not always clear.\"\r\n  window.foot_instruction = \"Which lesion has the <strong>more uniform colour</strong>?<br>Left &nbsp; &nbsp; &nbsp; Right<br><kbd><strong>Z</strong></kbd>&nbsp; &nbsp; &nbsp;<kbd><strong>M</strong></kbd>\";\r\n}\r\n\r\n\r\ndocument.getElementById('condition_instruction1').innerHTML = condition_instruction1;\r\ndocument.getElementById('condition_instruction2').innerHTML = condition_instruction2;\r\ndocument.getElementById('condition_instruction3').innerHTML = condition_instruction3;\r\n\r\n\r\n"
         },
         {
           "title": "",
@@ -178,14 +261,12 @@
         }
       ],
       "title": "loop",
-      "_tab": "Parameters"
+      "_tab": "Content"
     },
     "12": {
       "id": "12",
       "type": "lab.flow.Sequence",
       "children": [
-        "21",
-        "22",
         "17"
       ],
       "files": [],
@@ -212,15 +293,13 @@
         }
       ],
       "title": "sequence",
-      "_tab": "Content"
+      "_tab": "Scripts"
     },
     "13": {
       "id": "13",
       "type": "lab.flow.Sequence",
       "children": [
-        "14",
-        "15",
-        "16",
+        "1",
         "18",
         "19"
       ],
@@ -249,152 +328,6 @@
       ],
       "title": "sequence",
       "_tab": "Content"
-    },
-    "14": {
-      "id": "14",
-      "type": "lab.html.Screen",
-      "files": [],
-      "responses": [
-        {
-          "label": "",
-          "event": "",
-          "target": "",
-          "filter": ""
-        }
-      ],
-      "parameters": [
-        {
-          "name": "",
-          "value": "",
-          "type": "string"
-        }
-      ],
-      "messageHandlers": [
-        {
-          "title": "",
-          "message": "run",
-          "code": "// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;"
-        }
-      ],
-      "title": "interval",
-      "content": "<main class=\"content-horizontal-space-around content-vertical-center\">\r\n  <div>\r\n    <!-- <strong>+<strong> -->\r\n  </div>\r\n</main>\r\n\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p>\r\n</footer>",
-      "_tab": "Behavior",
-      "timeout": "500",
-      "tardy": false
-    },
-    "15": {
-      "id": "15",
-      "type": "lab.html.Screen",
-      "files": [],
-      "responses": [
-        {
-          "label": "",
-          "event": "",
-          "target": "",
-          "filter": ""
-        }
-      ],
-      "parameters": [
-        {
-          "name": "",
-          "value": "",
-          "type": "string"
-        }
-      ],
-      "messageHandlers": [
-        {
-          "title": "",
-          "message": "run",
-          "code": "// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;"
-        }
-      ],
-      "title": "cue",
-      "content": "<main <main class=\"content-horizontal-center content-vertical-center\">\r\n  <div>\r\n    <p style=\"font-size: 80px\">\r\n    +\r\n    </p>\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p>\r\n</footer>",
-      "_tab": "Content",
-      "timeout": "200"
-    },
-    "16": {
-      "id": "16",
-      "type": "lab.html.Screen",
-      "files": [
-        {
-          "localPath": "8.JPG",
-          "poolPath": "embedded/c9902cebdc103a8ae928bac780552d4acc7eb69280cda897b48dcae717bca341.JPG"
-        },
-        {
-          "localPath": "0.JPG",
-          "poolPath": "embedded/829cb62e8ae0d628100407f2a2a50e98ed4b65155e8f1f6d345ce1fcf0b4115a.JPG"
-        },
-        {
-          "localPath": "1.JPG",
-          "poolPath": "embedded/8d3cae9f08e28e88748d7a0fde8b7b9585fc9cf2992fab369f65c79c01933754.JPG"
-        },
-        {
-          "localPath": "2.JPG",
-          "poolPath": "embedded/8a51d2c36fea65fa95fc8130bd930c886d9709076c8e85c37465a06fa3767e2d.JPG"
-        },
-        {
-          "localPath": "3.JPG",
-          "poolPath": "embedded/71eae3775faecb0f1570bfb305c665bd513378bfe47c451e43ed97fce882586d.JPG"
-        },
-        {
-          "localPath": "4.JPG",
-          "poolPath": "embedded/a2bf9b45afdcdb2ee5aff6df7e400b5ca275760e0f6275dc51fb9e008ee71cfb.JPG"
-        },
-        {
-          "localPath": "5.JPG",
-          "poolPath": "embedded/587b84f7a22bb4383a52bd309c36f06c0093c7440ce6952cb7fb9009bf628b74.JPG"
-        },
-        {
-          "localPath": "6.JPG",
-          "poolPath": "embedded/342c5f996b8b413e7c68dfd9a71776d32688492323fa397260dd3512922fdd90.JPG"
-        },
-        {
-          "localPath": "7.JPG",
-          "poolPath": "embedded/944eda56cab9031b0208bb06994bba29a703a25013e56755fac051debe418a1d.JPG"
-        }
-      ],
-      "responses": [
-        {
-          "label": "0",
-          "event": "keypress",
-          "target": "",
-          "filter": "z"
-        },
-        {
-          "label": "1",
-          "event": "keypress",
-          "filter": "m"
-        },
-        {
-          "label": "0",
-          "event": "keypress",
-          "filter": "Z"
-        },
-        {
-          "filter": "M",
-          "label": "1"
-        }
-      ],
-      "parameters": [
-        {
-          "name": "selection_duration",
-          "value": "500",
-          "type": "string"
-        }
-      ],
-      "messageHandlers": [
-        {
-          "title": "",
-          "message": "run",
-          "code": "window.trials_per_block = this.parameters.total_trials / this.parameters.total_blocks;\r\n\r\nif ( ! window.blockNo)\r\n  window.blockNo = 1;\r\n\r\nif ( ! window.trialNo)\r\n  window.trialNo = 1;\r\nelse\r\n  window.trialNo++;\r\n\r\nthis.parameters.blockNo = window.blockNo;\r\nthis.parameters.trialNo = window.trialNo;\r\nwindow.total_blocks = this.parameters.total_blocks;\r\n\r\nif (window.trialNo === window.trials_per_block) {\r\n  window.trialNo = 0;\r\n  window.blockNo++;\r\n  window.takeBreak = true;\r\n  if (window.blockNo === window.total_blocks + 1 && !this.parameters.practice){\r\n    window.endExperiment = true;\r\n  }\r\n}\r\nelse {\r\n  window.takeBreak = false;\r\n  window.endExperiment = false;\r\n}\r\n\r\nif (this.parameters.practice){\r\n  this.parameters.img_left = window.practice_stimuli[window.trialNo][0];\r\n  this.parameters.img_right = window.practice_stimuli[window.trialNo][1];\r\n} else {\r\n  // copy the stimulus list so you can remove the first random choice, \r\n  // thereby ensuring you don't pick doubles.\r\n  let tmp_list = window.stimuli.map((x) => x);\r\n  this.parameters.img_left = this.random.choice(tmp_list);\r\n  tmp_list.splice(tmp_list.indexOf(this.parameters.img_left), 1);\r\n  this.parameters.img_right=this.random.choice(tmp_list);\r\n}\r\n\r\n// window.new_stim = [`${ this.files[this.parameters.img_left] }`, `${ this.files[this.parameters.img_right] }`];\r\nwindow.new_stim = [window.img_root + this.parameters.img_left, window.img_root + this.parameters.img_right];\r\n\r\nfunction changeImage(element, path) {\r\n  element.src = path;\r\n}\r\n\r\n// For image selection feedback\r\nlet display_left = document.getElementById('display_left');\r\nlet display_right= document.getElementById('display_right');\r\n\r\n\r\nlet selections = {\r\n  '0': display_left,\r\n  '1': display_right,\r\n}\r\n\r\nlet trial_stimuli = [this.parameters.img_left, this.parameters.img_right];\r\nconsole.log(window.img_root + trial_stimuli[0])\r\n\r\n// allow a moment for image load time, thus 'ensuring' perception of equal presentation times\r\nlet load_time = 100 //ms\r\nlet load_timer = load_time;\r\nlet fps = 60;\r\n\r\nonly_once = 1;\r\none_change = 1;\r\n\r\nshow_stim = () => {\r\n  if (load_timer != load_time && one_change===1){\r\n    changeImage(display_left, window.new_stim[0]);\r\n    changeImage(display_right, window.new_stim[1]);\r\n  }\r\n\r\n\r\n  if (load_timer <= 0 && only_once===1){\r\n    display_left.className += ' shown';\r\n    display_right.className += ' shown'\r\n    only_once = 0;\r\n    this.parameters.img_reveal = this.parameters.timestamp;\r\n  }\r\n  load_timer -= 1/fps * 1000;\r\n}\r\n\r\n// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;\r\n\r\n// override respond()\r\nthis._respond = this.respond;\r\nthis.respond = (response=null, timestamp=undefined) => {\r\n  // response === this.parameters.response;\r\n  // this.parameters.correct = (response === this.parameters.correctResponse);\r\n  let wait = this.parameters.selection_duration;\r\n  selections[response].className += ' border';\r\n  // if (this.parameters.practice) {\r\n  //     wait = this.parameters.practiceFeedbackDuration;\r\n  //     selections[this.parameters.correctResponse].className += ' shown';\r\n  // }\r\n  this.parameters.winner = trial_stimuli[response];\r\n  this.parameters.loser  = trial_stimuli[Math.abs(response - 1)]\r\n  \r\n  setTimeout(() => {\r\n    this._respond(response, timestamp);\r\n  }, wait);\r\n}\r\n\r\nlet iid = setInterval(show_stim, 1/fps*1000);\r\nlet end = (reason) => {\r\n  clearInterval(iid)\r\n  return this.originalEnd(reason)\r\n}\r\nthis.originalEnd = this.end\r\nthis.end = end"
-        }
-      ],
-      "title": "trial",
-      "_tab": "Content",
-      "content": "<!-- CSS for these divs and imgs are managed via the settings button in the top left corner of labjs -->\r\n<main class=\"content-horizontal-center content-vertical-center\">\r\n  <div id=\"container\">\r\n    <!-- <img src=${ this.files[this.parameters.img_left]} id=\"display_left\" class=\"display\"/>   -->\r\n    <img id=\"display_left\"  class=\"display\"/>\r\n    <img id=\"display_right\" class=\"display\" />\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p> \r\n</footer>",
-      "timeout": "10000",
-      "tardy": false
     },
     "17": {
       "id": "17",
@@ -470,12 +403,12 @@
         {
           "title": "",
           "message": "run",
-          "code": "window.trials_per_block = this.parameters.total_trials / this.parameters.total_blocks;\r\n\r\nif ( ! window.blockNo)\r\n  window.blockNo = 0;\r\n\r\nif ( ! window.trialNo)\r\n  window.trialNo = 1;\r\nelse\r\n  window.trialNo++;\r\n\r\nthis.parameters.blockNo = window.blockNo;\r\nthis.parameters.trialNo = window.trialNo;\r\n\r\nif (window.trialNo === window.trials_per_block) {\r\n  window.trialNo = 0;\r\n  window.blockNo++;\r\n  window.takeBreak = true;\r\n  // if (window.blockNo === window.total_blocks + 1 && !this.parameters.practice){\r\n  //   window.endExperiment = true;\r\n  // }\r\n}\r\nelse {\r\n  window.takeBreak = false;\r\n  window.endExperiment = false;\r\n}\r\n\r\n\r\nif (this.parameters.practice){\r\n  this.parameters.img_left = window.practice_stimuli[window.trialNo][0];\r\n  this.parameters.img_right = window.practice_stimuli[window.trialNo][1];\r\n} else {\r\n  this.parameters.img_left = this.random.choice(window.stimuli);\r\n  this.parameters.img_right = this.random.choice(window.stimuli)\r\n}\r\n\r\nwindow.new_stim = [`${ this.files[this.parameters.img_left] }`, `${ this.files[this.parameters.img_right] }`];\r\n\r\nfunction changeImage(element, path) {\r\n  element.src=path;\r\n}\r\n\r\n// For image selection feedback\r\nlet display_left = document.getElementById('display_left');\r\nlet display_right= document.getElementById('display_right');\r\n\r\n\r\nlet selections = {\r\n  '0': display_left,\r\n  '1': display_right,\r\n}\r\n\r\nlet trial_stimuli = [this.parameters.img_left, this.parameters.img_right];\r\n\r\n// allow a moment for image load time, thus 'ensuring' perception of equal presentation times\r\nlet load_time = 100 //ms\r\nlet load_timer = load_time;\r\nlet fps = 60;\r\n// let last_update = 0;\r\n// let time_since_last = last_update;\r\nonly_once = 1;\r\none_change = 1;\r\n\r\nshow_stim = () => {\r\n  if (load_timer != load_time && one_change===1){\r\n    changeImage(display_left, window.new_stim[0]);\r\n    changeImage(display_right, window.new_stim[1]);\r\n  }\r\n\r\n\r\n  if (load_timer <= 0 && only_once===1){\r\n    display_left.className += ' shown';\r\n    display_right.className += ' shown'\r\n    only_once = 0;\r\n    this.parameters.img_reveal = this.parameters.timestamp;\r\n  }\r\n  load_timer -= 1/fps * 1000; // a better man would calculate time since last frame and substract that.\r\n}\r\n\r\n// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;\r\n\r\n// override respond()\r\nthis._respond = this.respond;\r\nthis.respond = (response=null, timestamp=undefined) => {\r\n  // response === this.parameters.response;\r\n  // this.parameters.correct = (response === this.parameters.correctResponse);\r\n  let wait = this.parameters.selection_duration;\r\n  selections[response].className += ' border';\r\n  // if (this.parameters.practice) {\r\n  //     wait = this.parameters.practiceFeedbackDuration;\r\n  //     selections[this.parameters.correctResponse].className += ' shown';\r\n  // }\r\n  this.parameters.winner = trial_stimuli[response];\r\n  this.parameters.loser  = trial_stimuli[Math.abs(response - 1)]\r\n  \r\n  setTimeout(() => {\r\n    this._respond(response, timestamp);\r\n  }, wait);\r\n}\r\n\r\nlet iid = setInterval(show_stim, 1/fps*1000);\r\nlet end = (reason) => {\r\n  clearInterval(iid)\r\n  return this.originalEnd(reason)\r\n}\r\nthis.originalEnd = this.end\r\nthis.end = end\r\n"
+          "code": "window.trials_per_block = this.parameters.total_trials / this.parameters.total_blocks;\r\n\r\nif ( ! window.blockNo)\r\n  window.blockNo = 0;\r\n\r\nif ( ! window.trialNo)\r\n  window.trialNo = 1;\r\nelse\r\n  window.trialNo++;\r\n\r\nthis.parameters.blockNo = window.blockNo;\r\nthis.parameters.trialNo = window.trialNo;\r\n\r\nif (window.trialNo === window.trials_per_block) {\r\n  window.trialNo = 0;\r\n  window.blockNo++;\r\n  window.takeBreak = true;\r\n  // if (window.blockNo === window.total_blocks + 1 && !this.parameters.practice){\r\n  //   window.endExperiment = true;\r\n  // }\r\n}\r\nelse {\r\n  window.takeBreak = false;\r\n  window.endExperiment = false;\r\n}\r\n\r\n\r\nif (this.parameters.practice){\r\n  this.parameters.img_left = window.practice_stimuli[window.trialNo][0];\r\n  this.parameters.img_right = window.practice_stimuli[window.trialNo][1];\r\n} else {\r\n  this.parameters.img_left = this.random.choice(window.stimuli);\r\n  this.parameters.img_right = this.random.choice(window.stimuli)\r\n}\r\n\r\nwindow.new_stim = [`${ this.files[this.parameters.img_left] }`, `${ this.files[this.parameters.img_right] }`];\r\n\r\nfunction changeImage(element, path) {\r\n  element.src=path;\r\n}\r\n\r\n// For image selection feedback\r\nlet display_left = document.getElementById('display_left');\r\nlet display_right= document.getElementById('display_right');\r\n\r\n\r\nlet selections = {\r\n  '0': display_left,\r\n  '1': display_right,\r\n}\r\n\r\nlet trial_stimuli = [this.parameters.img_left, this.parameters.img_right];\r\n\r\n// allow a moment for image load time, thus 'ensuring' perception of equal presentation times\r\nlet onset_stimulus = 1500; //ms\r\nlet onset_cue = 500;\r\nlet load_timer = onset_stimulus;\r\nlet fps = 60;\r\nlet only_once_stim = 1;\r\nlet only_once_cue = 1;\r\n\r\nrun_trial = () => {\r\n  // load the images\r\n  if (load_timer != onset_stimulus && only_once_stim===1){\r\n    changeImage(display_left, window.new_stim[0]);\r\n    changeImage(display_right, window.new_stim[1]);\r\n  }\r\n  // reveal the cue with 'onset_cue' time remaining before the stimulus reveal\r\n  if (load_timer <= onset_cue && only_once_cue===1){\r\n    cue_display.className += ' shown';\r\n    only_once_cue=0;\r\n  }\r\n  if (load_timer <= 0 && only_once_stim===1){\r\n    cue_display.className = 'cue';\r\n    display_left.className += ' shown';\r\n    display_right.className += ' shown'\r\n    only_once_stim = 0;\r\n    this.parameters.img_reveal = this.parameters.timestamp;\r\n  }\r\n  load_timer -= 1/fps * 1000; // a better man would calculate time since last frame and substract that.\r\n}\r\n\r\n// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;\r\n\r\n// override respond()\r\nthis._respond = this.respond;\r\nthis.respond = (response=null, timestamp=undefined) => {\r\n  // response === this.parameters.response;\r\n  // this.parameters.correct = (response === this.parameters.correctResponse);\r\n  if (only_once_stim===0){\r\n    let wait = this.parameters.selection_duration;\r\n    selections[response].className += ' border';\r\n    // if (this.parameters.practice) {\r\n    //     wait = this.parameters.practiceFeedbackDuration;\r\n    //     selections[this.parameters.correctResponse].className += ' shown';\r\n    // }\r\n    this.parameters.winner = trial_stimuli[response];\r\n    this.parameters.loser  = trial_stimuli[Math.abs(response - 1)]\r\n    \r\n    setTimeout(() => {\r\n      this._respond(response, timestamp);\r\n    }, wait);\r\n  } else {\r\n    //response=null;\r\n  }\r\n}\r\n\r\nlet iid = setInterval(run_trial, 1/fps*1000);\r\nlet end = (reason) => {\r\n  clearInterval(iid)\r\n  return this.originalEnd(reason)\r\n}\r\nthis.originalEnd = this.end\r\nthis.end = end\r\n"
         }
       ],
       "title": "trial",
       "_tab": "Scripts",
-      "content": "<!-- CSS for these divs and imgs are managed via the settings button in the top left corner of labjs -->\r\n<main class=\"content-horizontal-center content-vertical-center\">\r\n  <div id=\"container\">\r\n    <!-- <img src=${ this.files[this.parameters.img_left]} id=\"display_left\" class=\"display\"/>   -->\r\n    <img id=\"display_left\"  class=\"display\" />\r\n    <img id=\"display_right\" class=\"display\" />\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p> \r\n</footer>",
+      "content": "<!-- CSS for these divs and imgs are managed via the settings button in the top left corner of labjs -->\r\n<main class=\"content-horizontal-center content-vertical-center\">\r\n  <div id=\"container\">\r\n    <!-- <img src=${ this.files[this.parameters.img_left]} id=\"display_left\" class=\"display\"/>   -->\r\n    <img id=\"display_left\"  class=\"display\" />\r\n    <p id=\"cue_display\" class=\"cue\" style=\"font-size: 40px\">+</p>\r\n    <img id=\"display_right\" class=\"display\" />\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p> \r\n</footer>",
       "timeout": "10000",
       "tardy": false
     },
@@ -539,69 +472,6 @@
       "title": "break_continue",
       "content": "<main class=\"content-horizontal-center content-vertical-center\"> \r\n  <div>\r\n    <p id=\"block_progress\"> </p>\r\n    <p>Please press the <kbd><strong>spacebar</strong></kbd> to begin the next block.</p>\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p>\r\n</footer>",
       "_tab": "Content"
-    },
-    "21": {
-      "id": "21",
-      "type": "lab.html.Screen",
-      "files": [],
-      "responses": [
-        {
-          "label": "",
-          "event": "",
-          "target": "",
-          "filter": ""
-        }
-      ],
-      "parameters": [
-        {
-          "name": "",
-          "value": "",
-          "type": "string"
-        }
-      ],
-      "messageHandlers": [
-        {
-          "title": "",
-          "message": "run",
-          "code": "// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;"
-        }
-      ],
-      "title": "interval",
-      "content": "<main class=\"content-horizontal-space-around content-vertical-center\">\r\n  <div>\r\n    <!-- <strong>+<strong> -->\r\n  </div>\r\n</main>\r\n\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p>\r\n</footer>",
-      "_tab": "Behavior",
-      "timeout": "500",
-      "tardy": false
-    },
-    "22": {
-      "id": "22",
-      "type": "lab.html.Screen",
-      "files": [],
-      "responses": [
-        {
-          "label": "",
-          "event": "",
-          "target": "",
-          "filter": ""
-        }
-      ],
-      "parameters": [
-        {
-          "name": "",
-          "value": "",
-          "type": "string"
-        }
-      ],
-      "messageHandlers": [
-        {
-          "title": "",
-          "message": "run",
-          "code": "// footer \r\ndocument.getElementById('foot_instruction').innerHTML = window.foot_instruction;"
-        }
-      ],
-      "title": "cue",
-      "content": "<main <main class=\"content-horizontal-center content-vertical-center\">\r\n  <div>\r\n    <p style=\"font-size: 80px\">\r\n    +\r\n    </p>\r\n  </div>\r\n</main>\r\n\r\n<footer class=\"content-horizontal-center content-vertical-center\">\r\n  <p id=\"foot_instruction\"> </p>\r\n</footer>",
-      "_tab": "Content",
-      "timeout": "200"
     },
     "25": {
       "id": "25",
@@ -668,7 +538,7 @@
         "source": "library"
       },
       "style.css": {
-        "content": "data:text/css,%0D%0Aheader%20%7B%0D%0A%20%20max-height%3A%2010px%3B%0D%0A%7D%0D%0Abody%20%7B%0D%0A%20%20user-select%3A%20none%20%3B%0D%0A%7D%0D%0Aalert%20%7B%0D%0A%20%20max-height%3A%2010px%3B%0D%0A%7D%0D%0A%23container%20%7B%0D%0A%20%20display%3A%20grid%20%3B%0D%0A%20%20margin%3A%20auto%20%3B%0D%0A%20%20grid-gap%3A%2050px%20%3B%0D%0A%20%20column-gap%3A%2050px%20%3B%0D%0A%20%20text-align%3A%20center%20%3B%0D%0A%20%20align-items%3A%20center%20%3B%0D%0A%20%20justify-items%3A%20center%20%3B%20%20%0D%0A%7D%0D%0A%0D%0A.display%20%7B%0D%0A%20%20%2F*%20image-rendering%3A%20crisp-edges%3B%20*%2F%0D%0A%20%20width%3A%20250px%20%3B%0D%0A%20%20height%3A%20250px%20%3B%0D%0A%20%20grid-row%3A%201%20%3B%0D%0A%20%20border%3A%204px%20solid%3B%0D%0A%20%20border-color%3A%20black%3B%0D%0A%20%20display%3A%20none%3B%0D%0A%7D%0D%0A.display.shown%20%7B%0D%0A%20%20display%3A%20block%3B%0D%0A%7D%0D%0A.display.border%20%7B%0D%0A%20%20border-color%3A%20%23d6341a%3B%0D%0A%7D%0D%0A%2F*%20.marker%20%7B%0D%0A%20%20width%3A%20200px%20%3B%0D%0A%20%20height%3A%2050px%20%3B%0D%0A%20%20background-color%3A%20pink%20%3B%0D%0A%20%20grid-row%3A%203%20%3B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20visibility%3A%20hidden%20%3B%0D%0A%7D%0D%0A%0D%0A.marker.shown%20%7B%0D%0A%20%20visibility%3A%20visible%20%3B%0D%0A%7D%0D%0A%0D%0A.feedback%20%7B%0D%0A%20%20width%3A%20200px%20%3B%0D%0A%20%20height%3A%2050px%20%3B%0D%0A%20%20background-color%3A%20lightblue%20%3B%0D%0A%20%20grid-row%3A%201%20%3B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20visibility%3A%20hidden%20%3B%0D%0A%7D%0D%0A%0D%0A.feedback.shown%20%7B%0D%0A%20%20visibility%3A%20visible%20%3B%0D%0A%7D%0D%0A%0D%0A%23choice-box%20%7B%0D%0A%20%20display%3A%20flex%20%3B%0D%0A%20%20flex-direction%3A%20row%20%3B%0D%0A%20%20margin%3A%20auto%20%3B%0D%0A%7D%0D%0A%0D%0A.choice%20%7B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20cursor%3A%20pointer%20%3B%0D%0A%7D%0D%0A%0D%0A.choice%3Ahover%20%7B%0D%0A%20%20background-color%3A%20%23EEEEEE%20%3B%0D%0A%7D%0D%0A%0D%0A.choice.response%20%7B%0D%0A%20%20background-color%3A%20pink%20%3B%0D%0A%7D%0D%0A%0D%0A.marker%20%7B%0D%0A%20%20width%3A%20100px%20%3B%0D%0A%20%20height%3A%20139px%20%3B%0D%0A%20%20background-image%3A%20url('data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAGQAAACLCAAAAACym2PfAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAB3RJTUUH4wEPBjQnI6rARAAAAAJiS0dEAP%2BHj8y%2FAAAEPUlEQVRo3u3YXWxTZRzH8W9fxrrOAcuqKxlMZZjBcAYXk2VERhCyGMHpBfhysQYSIxAyhRgDF25jXIAxgE7nEjTBxqhhF2TgG2METCbEgAWjDBYHFsx0k6EM5ma3vpzjRcdLt7bnnXDx%2FO7O0%2FP00zTPeZ7%2F%2FyDfhSAQgdw7SDRmPSJ9%2FKn1yPcFs45bjVxeBIsuWYuENgC8OmIlIjW7AdwfShYiHfkAUHDEOqSnnPGU91iFDPu4Fd%2BwNUhslwugogLAtStmCdLxAMCckyfnANz%2FrRXIuTKAbL8s%2B7MBHj9vPnJjFYB9U0iWQxttAC8PmY1Et2cALPtLlmX5ytMAGdujJiNf5gHM%2BzF%2BdXouQN5%2Bc5HzZQBTW29ef3YfwKNdZiIDKwAcW8I3B8JbHACr%2FjEPCb9lB1j%2B9%2B2hq88DOOvCpiFfTAOYG7hz7JcSgGmfm4X8XALgOZg42poL8MhP5iB9ywGcjRP2kUijE2DFgBnI2BsAvDg48YPBlwBsb46ZgOzNAShNslp%2FfQwgZ69xJFAE4P0q6RPqASgKGEX6qgAy3kl%2BGr89BaDqT2PI6CYAVqfYC4dWA9hq%2FzOCSC1ugLILqW64UAbgbjGCdBYAeNtT39E%2BA%2BDB4%2FqRy4sBMnemKYCkJhfA4t%2F1IqF1ALZ1aUu5kbUAvDKiD4k1ZwM82Zv%2Br7i0ECDzfX1IvJIrPKa0Po%2FNAij4Tg9ysQIgs0X5ef4oC6DionZkxAdgX6%2BiiBvdAEDNDa3I%2BKpZ1q9mJ%2F%2BjEiBzt6QR%2BTofYPYJdcfridkA3kPakO4FAO5P1JYj%2FhyAsm4tyODK%2BJ4UUouMvm4DWDmoHontcAI80y%2BrTny3du6IqUYOeACKz2jpDgLFAJ42tci5BQDTW7V1U63TAeafVYcMVAPYN0e0IZHNdoDnrqlBovV2gOoBWWPGf9zWqApkXy7AvDOy5pydD5C7TxnpildyB%2FS8p2nLBSgOKCH91QCOrTE9SLTOAfDs1fRIeCNaqvWJufZCfM2MpUX8UwFKumSd6Y73Mf50yKmHAfLb9L8%2BO%2BgBeOiH1EhfvBfcbeAd3XhvWdWfCgmtVzp81HTJNQC8NpYC2eMGeOI32VCC5QDuPcmRzpkA3m9kg2nPB5jZmQzpXQLgapaMItK7UwCW9E5GRuOV3Jrr0UhCVDyVscQZ0etrbABrhyci0gdZAPbSpU8lpNKv4uytTJyztNQO4HpPmoAc8pI8dcpIXYqpM44kIsHyFDfSoIw0pJq7MHgn8q8PKxB8Q7cRqTnL7pgcuxYk6Rdk7ozdQqKnD3dMztEaLUjN0SRfcfhURKk%2F2aYF2aazCWrQgjQIRCACEYhABCIQgQhEIAIRiEAEIhCBCEQgArmLSKMy0mgYqQ32KCRYaxhxe%2FIU4nEbRtTmnkbqtSD1OpGmwiLVKWzSiQxf0ZBhnYh5EYhABCIQk%2FM%2FHwutRjZ15IsAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTktMDEtMTVUMDU6NTI6MzkrMDE6MDA1KWE7AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE5LTAxLTE1VDA1OjUyOjM5KzAxOjAwRHTZhwAAAABJRU5ErkJggg%3D%3D')%3B%20%0D%0A%7D%20*%2F%0D%0A%0D%0A.round-time-bar%20%7B%0D%0A%20%20margin%3A%201rem%3B%0D%0A%20%20overflow%3A%20hidden%3B%0D%0A%7D%0D%0A.round-time-bar%20div%20%7B%0D%0A%20%20height%3A%2015px%3B%0D%0A%20%20animation%3A%20roundtime%20calc(var(--duration)%20*%201s)%20steps(var(--duration))%0D%0A%20%20%20%20forwards%3B%0D%0A%20%20transform-origin%3A%20left%20center%3B%0D%0A%20%20background%3A%20linear-gradient(to%20bottom%2C%20%23d6341a%2C%20%23900)%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-style%3D%22smooth%22%5D%20div%20%7B%0D%0A%20%20animation%3A%20roundtime%20calc(var(--duration)%20*%201s)%20linear%20forwards%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-style%3D%22fixed%22%5D%20div%20%7B%0D%0A%20%20width%3A%20calc(var(--duration)%20*%205%25)%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-color%3D%22blue%22%5D%20div%20%7B%0D%0A%20%20background%3A%20linear-gradient(to%20bottom%2C%20%2364b5f6%2C%20%231565c0)%3B%0D%0A%7D%0D%0A%0D%0A%40keyframes%20roundtime%20%7B%0D%0A%20%20to%20%7B%0D%0A%20%20%20%20%2F*%20More%20performant%20than%20%60width%60%20*%2F%0D%0A%20%20%20%20transform%3A%20scaleX(0)%3B%0D%0A%20%20%7D%0D%0A%7D%0D%0A%0D%0A",
+        "content": "data:text/css,%0D%0Aheader%20%7B%0D%0A%20%20max-height%3A%2010px%3B%0D%0A%7D%0D%0Abody%20%7B%0D%0A%20%20user-select%3A%20none%20%3B%0D%0A%7D%0D%0Aalert%20%7B%0D%0A%20%20max-height%3A%2010px%3B%0D%0A%7D%0D%0A%23container%20%7B%0D%0A%20%20display%3A%20grid%20%3B%0D%0A%20%20margin%3A%20auto%20%3B%0D%0A%20%20grid-gap%3A%2050px%20%3B%0D%0A%20%20column-gap%3A%2050px%20%3B%0D%0A%20%20text-align%3A%20center%20%3B%0D%0A%20%20align-items%3A%20center%20%3B%0D%0A%20%20justify-items%3A%20center%20%3B%20%20%0D%0A%7D%0D%0A%0D%0A.display%20%7B%0D%0A%20%20%2F*%20image-rendering%3A%20crisp-edges%3B%20*%2F%0D%0A%20%20width%3A%20250px%20%3B%0D%0A%20%20height%3A%20250px%20%3B%0D%0A%20%20grid-row%3A%201%20%3B%0D%0A%20%20border%3A%204px%20solid%3B%0D%0A%20%20border-color%3A%20black%3B%0D%0A%20%20display%3A%20none%3B%0D%0A%7D%0D%0A.display.shown%20%7B%0D%0A%20%20display%3A%20block%3B%0D%0A%7D%0D%0A.display.border%20%7B%0D%0A%20%20border-color%3A%20%23d6341a%3B%0D%0A%7D%0D%0A%0D%0A.cue%20%7B%0D%0A%20%20width%3A%2050px%3B%0D%0A%20%20height%3A50px%3B%0D%0A%20%20grid-row%3A1%3B%0D%0A%20%20display%3A%20none%3B%0D%0A%7D%0D%0A.cue.shown%20%7B%0D%0A%20%20display%3A%20block%3B%0D%0A%7D%0D%0A%0D%0A%2F*%20.marker%20%7B%0D%0A%20%20width%3A%20200px%20%3B%0D%0A%20%20height%3A%2050px%20%3B%0D%0A%20%20background-color%3A%20pink%20%3B%0D%0A%20%20grid-row%3A%203%20%3B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20visibility%3A%20hidden%20%3B%0D%0A%7D%0D%0A%0D%0A.marker.shown%20%7B%0D%0A%20%20visibility%3A%20visible%20%3B%0D%0A%7D%0D%0A%0D%0A.feedback%20%7B%0D%0A%20%20width%3A%20200px%20%3B%0D%0A%20%20height%3A%2050px%20%3B%0D%0A%20%20background-color%3A%20lightblue%20%3B%0D%0A%20%20grid-row%3A%201%20%3B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20visibility%3A%20hidden%20%3B%0D%0A%7D%0D%0A%0D%0A.feedback.shown%20%7B%0D%0A%20%20visibility%3A%20visible%20%3B%0D%0A%7D%0D%0A%0D%0A%23choice-box%20%7B%0D%0A%20%20display%3A%20flex%20%3B%0D%0A%20%20flex-direction%3A%20row%20%3B%0D%0A%20%20margin%3A%20auto%20%3B%0D%0A%7D%0D%0A%0D%0A.choice%20%7B%0D%0A%20%20padding%3A%2012px%20%3B%0D%0A%20%20cursor%3A%20pointer%20%3B%0D%0A%7D%0D%0A%0D%0A.choice%3Ahover%20%7B%0D%0A%20%20background-color%3A%20%23EEEEEE%20%3B%0D%0A%7D%0D%0A%0D%0A.choice.response%20%7B%0D%0A%20%20background-color%3A%20pink%20%3B%0D%0A%7D%0D%0A%0D%0A.marker%20%7B%0D%0A%20%20width%3A%20100px%20%3B%0D%0A%20%20height%3A%20139px%20%3B%0D%0A%20%20background-image%3A%20url('data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAGQAAACLCAAAAACym2PfAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAB3RJTUUH4wEPBjQnI6rARAAAAAJiS0dEAP%2BHj8y%2FAAAEPUlEQVRo3u3YXWxTZRzH8W9fxrrOAcuqKxlMZZjBcAYXk2VERhCyGMHpBfhysQYSIxAyhRgDF25jXIAxgE7nEjTBxqhhF2TgG2METCbEgAWjDBYHFsx0k6EM5ma3vpzjRcdLt7bnnXDx%2FO7O0%2FP00zTPeZ7%2F%2FyDfhSAQgdw7SDRmPSJ9%2FKn1yPcFs45bjVxeBIsuWYuENgC8OmIlIjW7AdwfShYiHfkAUHDEOqSnnPGU91iFDPu4Fd%2BwNUhslwugogLAtStmCdLxAMCckyfnANz%2FrRXIuTKAbL8s%2B7MBHj9vPnJjFYB9U0iWQxttAC8PmY1Et2cALPtLlmX5ytMAGdujJiNf5gHM%2BzF%2BdXouQN5%2Bc5HzZQBTW29ef3YfwKNdZiIDKwAcW8I3B8JbHACr%2FjEPCb9lB1j%2B9%2B2hq88DOOvCpiFfTAOYG7hz7JcSgGmfm4X8XALgOZg42poL8MhP5iB9ywGcjRP2kUijE2DFgBnI2BsAvDg48YPBlwBsb46ZgOzNAShNslp%2FfQwgZ69xJFAE4P0q6RPqASgKGEX6qgAy3kl%2BGr89BaDqT2PI6CYAVqfYC4dWA9hq%2FzOCSC1ugLILqW64UAbgbjGCdBYAeNtT39E%2BA%2BDB4%2FqRy4sBMnemKYCkJhfA4t%2F1IqF1ALZ1aUu5kbUAvDKiD4k1ZwM82Zv%2Br7i0ECDzfX1IvJIrPKa0Po%2FNAij4Tg9ysQIgs0X5ef4oC6DionZkxAdgX6%2BiiBvdAEDNDa3I%2BKpZ1q9mJ%2F%2BjEiBzt6QR%2BTofYPYJdcfridkA3kPakO4FAO5P1JYj%2FhyAsm4tyODK%2BJ4UUouMvm4DWDmoHontcAI80y%2BrTny3du6IqUYOeACKz2jpDgLFAJ42tci5BQDTW7V1U63TAeafVYcMVAPYN0e0IZHNdoDnrqlBovV2gOoBWWPGf9zWqApkXy7AvDOy5pydD5C7TxnpildyB%2FS8p2nLBSgOKCH91QCOrTE9SLTOAfDs1fRIeCNaqvWJufZCfM2MpUX8UwFKumSd6Y73Mf50yKmHAfLb9L8%2BO%2BgBeOiH1EhfvBfcbeAd3XhvWdWfCgmtVzp81HTJNQC8NpYC2eMGeOI32VCC5QDuPcmRzpkA3m9kg2nPB5jZmQzpXQLgapaMItK7UwCW9E5GRuOV3Jrr0UhCVDyVscQZ0etrbABrhyci0gdZAPbSpU8lpNKv4uytTJyztNQO4HpPmoAc8pI8dcpIXYqpM44kIsHyFDfSoIw0pJq7MHgn8q8PKxB8Q7cRqTnL7pgcuxYk6Rdk7ozdQqKnD3dMztEaLUjN0SRfcfhURKk%2F2aYF2aazCWrQgjQIRCACEYhABCIQgQhEIAIRiEAEIhCBCEQgArmLSKMy0mgYqQ32KCRYaxhxe%2FIU4nEbRtTmnkbqtSD1OpGmwiLVKWzSiQxf0ZBhnYh5EYhABCIQk%2FM%2FHwutRjZ15IsAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTktMDEtMTVUMDU6NTI6MzkrMDE6MDA1KWE7AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE5LTAxLTE1VDA1OjUyOjM5KzAxOjAwRHTZhwAAAABJRU5ErkJggg%3D%3D')%3B%20%0D%0A%7D%20*%2F%0D%0A%0D%0A.round-time-bar%20%7B%0D%0A%20%20margin%3A%201rem%3B%0D%0A%20%20overflow%3A%20hidden%3B%0D%0A%7D%0D%0A.round-time-bar%20div%20%7B%0D%0A%20%20height%3A%2015px%3B%0D%0A%20%20animation%3A%20roundtime%20calc(var(--duration)%20*%201s)%20steps(var(--duration))%0D%0A%20%20%20%20forwards%3B%0D%0A%20%20transform-origin%3A%20left%20center%3B%0D%0A%20%20background%3A%20linear-gradient(to%20bottom%2C%20%23d6341a%2C%20%23900)%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-style%3D%22smooth%22%5D%20div%20%7B%0D%0A%20%20animation%3A%20roundtime%20calc(var(--duration)%20*%201s)%20linear%20forwards%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-style%3D%22fixed%22%5D%20div%20%7B%0D%0A%20%20width%3A%20calc(var(--duration)%20*%205%25)%3B%0D%0A%7D%0D%0A%0D%0A.round-time-bar%5Bdata-color%3D%22blue%22%5D%20div%20%7B%0D%0A%20%20background%3A%20linear-gradient(to%20bottom%2C%20%2364b5f6%2C%20%231565c0)%3B%0D%0A%7D%0D%0A%0D%0A%40keyframes%20roundtime%20%7B%0D%0A%20%20to%20%7B%0D%0A%20%20%20%20%2F*%20More%20performant%20than%20%60width%60%20*%2F%0D%0A%20%20%20%20transform%3A%20scaleX(0)%3B%0D%0A%20%20%7D%0D%0A%7D%0D%0A%0D%0A",
         "source": "library"
       },
       "embedded/8d3cae9f08e28e88748d7a0fde8b7b9585fc9cf2992fab369f65c79c01933754.JPG": {
