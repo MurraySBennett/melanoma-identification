@@ -1,4 +1,4 @@
- ## packages
+## packages
 {
   library(tidyverse)
 }
@@ -67,7 +67,7 @@ process_data <- function(file){
 }
 
 print(unique(data$pID))
-
+print(length(unique(data$pID)))
 
 ## summary data
 {
