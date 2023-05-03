@@ -40,7 +40,11 @@ def process_data(file):
         df['condition'] = condition
         df['response'] = df['response'].replace({'nan': np.nan, '0': 0, '1': 1}).astype('Int64')
         df['duration'] = df['duration']
-        
+        # df['img_left'] = [i.split('.')[0] for i in df['img_left']]
+        # df['img_right'] = [i.split('.')[0] for i in df['img_right']]
+        # df['winner'] = [i.split('.')[0] for i in df['winner'] if i is not None else np.nan]
+        # df['loser'] = [i.split('.')[0] for i in df['loser'] if i is not None else np.nan]
+
     # if df.shape[0] == 0):
         # return None
     # else:
@@ -64,26 +68,39 @@ def read_all(files):
 
 
 def plot_rt(reg, irr, colours):
-    fig, ax = plt.subplots(1, 2, figsize=(8,4))
-    # ax[0].axhline(np.mean(summary['exp_duration']), color='r', lw=5, zorder=0)
-    ax[0].axhline(np.mean(reg['exp_dur']), c=colours[0], lw=2, linestyle='--')
-    ax[0].axhline(np.mean(irr['exp_dur']), c=colours[1], lw=2, linestyle='--')
-    ax[0].scatter(reg['pnum'], reg['exp_dur'], c=colours[0], zorder=1, label='reg')
-    ax[0].scatter(irr['pnum'], irr['exp_dur'], c=colours[1], zorder=1, label='irr')
-    ax[0].legend()
-    ax[0].set_title('completion time')
+    """ plot response time data """
+    fig_width = 4
+    fig_height = 4
+    n_rows = 1
+    n_cols = 2
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
 
-    ax[1].axhline(np.mean(reg['meanRT']), c=colours[0], lw=2, linestyle='--')
-    ax[1].axhline(np.mean(irr['meanRT']), c=colours[1], lw=2, linestyle='--')
-    ax[1].errorbar(reg['pnum'], reg['meanRT'], reg['semRT'], c=colours[0], fmt='o', capsize=5, zorder=1,  label='reg')
-    ax[1].errorbar(irr['pnum'], irr['meanRT'], irr['semRT'], c=colours[1], fmt='o', capsize=5, zorder=1,  label='irr')
-    # ax[1].scatter(irr['pnum'], irr['meanRT'], zorder=1, c='g', label='irr')
-    # ax[1].legend()
-    ax[1].set_title('mean RT')
+    ax[0].axhline(0, c=colours[3], lw=2, linestyle='-', zorder=0)
+    ax[0].axhline(np.mean(reg['meanRT']), c=colours[0], lw=2, linestyle='--')
+    ax[0].axhline(np.mean(irr['meanRT']), c=colours[1], lw=2, linestyle='--')
+    ax[0].errorbar(reg['pnum'], reg['meanRT'], reg['stdRT'], c=colours[0], fmt='o', capsize=5, zorder=1,  label='reg')
+    ax[0].errorbar(irr['pnum'], irr['meanRT'], irr['stdRT'], c=colours[1], fmt='o', capsize=5, zorder=1,  label='irr')
+    # ax[0].scatter(irr['pnum'], irr['meanRT'], zorder=1, c='g', label='irr')
+    # ax[0].legend()
+    ax[0].set_title('mean RT')
     
+    # ax[1].axhline(np.mean(summary['exp_duration']), color='r', lw=5, zorder=0)
+    ax[1].axhline(np.mean(reg['exp_dur']), c=colours[0], lw=2, linestyle='--')
+    ax[1].axhline(np.mean(irr['exp_dur']), c=colours[1], lw=2, linestyle='--')
+    ax[1].scatter(reg['pnum'], reg['exp_dur'], c=colours[0], zorder=1, label='reg')
+    ax[1].scatter(irr['pnum'], irr['exp_dur'], c=colours[1], zorder=1, label='irr')
+    ax[1].legend()
+    ax[1].set_title('completion time')
+
 
 def plot_bias(reg, irr, colours):
-    fig, ax = plt.subplots(1, 2, figsize=(4,4))
+    """ plot response position data """
+    fig_width = 4
+    fig_height = 4
+    n_rows = 1
+    n_cols = 2
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
+
     ax[0].axhline(np.mean(reg['pos_bias']), c=colours[0], lw=2, linestyle='--')
     ax[0].axhline(np.mean(irr['pos_bias']), c=colours[1], lw=2, linestyle='--')
     ax[0].scatter(reg['pnum'], reg['pos_bias'], c=colours[0], zorder=1, label='reg')
@@ -110,6 +127,11 @@ def meanRT(x):
 
 def semRT(x):
     return sem(x) / 1000
+
+
+def stdRT(x):
+    sd = np.std(x) / 1000
+    return sd if sd < 10 else np.nan# np.std(x) / 1000
 
 
 def exp_dur(x):
@@ -149,6 +171,8 @@ def main():
         files = files[:n_files]
     data = read_all(files)
     
+    print(data.head())
+
     # summary_rt = data.groupby(['condition', 'pnum'])['duration'].agg([
     #     ('meanRT', lambda x: (x.mean() / 1000) - 1.5), 
     #     ('seRT', lambda x: sem(x) / 1000),
@@ -157,13 +181,14 @@ def main():
     #     ]).reset_index()
 
     summary = data.groupby(['condition', 'pnum']).agg({
-        'response': [pos_bias],
-        'duration': [meanRT, semRT, exp_dur]
+        'response': [pos_bias, count_left, count_right, count_timeouts],
+        'duration': [meanRT, semRT, stdRT, exp_dur]
         }).reset_index()
-    # summary.columns = ['{}_{}'.format(col[0], col[1]) if col[1] else col[0] for col in summary.columns]
     summary.columns = [col[1] if col[1] else col[0] for col in summary.columns]
 
-    print(np.unique(data['pID']))
+    print(data.shape)
+    print(f'participant ids: {np.unique(data["pID"])}')
+    print(f'n unique images evaluated: {len(np.unique([data["img_left"], data["img_right"]]))}')
     print(summary)
     # print(summary.mean())
 
