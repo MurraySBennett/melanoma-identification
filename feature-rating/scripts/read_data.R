@@ -66,8 +66,10 @@ process_data <- function(file){
     mutate(pnum = cur_group_id())
 }
 
-print(unique(data$pID))
-print(length(unique(data$pID)))
+# for (i in unique(data$pID)){
+#   print(i)
+# }
+# print(length(unique(data$pID)))
 
 ## summary data
 {
