@@ -218,8 +218,6 @@ toc()
 
 if (save_data){
   write.csv(sim_data, paste(min_participants, '-', max_participants, '_images', min_players, '-', max_players, '.csv',sep=""), row.names=FALSE)
-
+}
 
 View(sim_data)
-
-
