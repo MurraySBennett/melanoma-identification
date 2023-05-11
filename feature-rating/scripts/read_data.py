@@ -40,8 +40,10 @@ def process_data(file):
         df['response'] = df['response'].replace({'nan': np.nan, '0': 0, '1': 1}).astype('Int64')
         df['winner'] = df['winner'].astype('str')
         df['loser'] = df['loser'].astype('str')
-        # df['duration'] = df['duration']
-        # df['img_left'] = [i.split('.')[0] for i in df['img_left']]
+        
+        df['winner'] = [x.replace('.JPG', '') for x in df['winner']]
+        df['loser'] = [x.replace('.JPG', '') for x in df['loser']]
+
         # df['img_right'] = [i.split('.')[0] for i in df['img_right']]
         # df['winner'] = [i.split('.')[0] for i in df['winner'] if i is not None else np.nan]
         # df['loser'] = [i.split('.')[0] for i in df['loser'] if i is not None else np.nan]
@@ -115,22 +117,22 @@ def reverse_score(df, key):
 
 def main():
     n_files = None
-    home_path = "/mnt/c/Users/qlm573/melanoma-identification/feature-rating/"
+    home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     paths = dict(
         home=home_path,
-        data=os.path.join(home_path, "experiment", "melanoma-2afc", "data"),
+        data=os.path.join(home_path, "feature-rating", "experiment", "melanoma-2afc", "data"),
         cv_data=os.path.join(home_path, "computer-vision", "scripts", "feature-analysis"),
-        figures=os.path.join(home_path, "figures")
+        figures=os.path.join(home_path, "feature-rating", "figures")
         )
     files=glob.glob(os.path.join(paths['data'], '*.csv'))
     if n_files is not None:
         files = files[:n_files]
     data = read_all(files)
+
     image_ids  = sorted(list(set(data.winner) | set(data.loser)))
-    
     ## import shape data
-    # shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
-    # print(shape_data)
+    shape_data = pd.read_csv(os.path.join(paths['cv_data'], 'shape.txt'), delim_whitespace=True, header=0)
+    shape_data['isic_id'] = [x.strip('.png') for x in shape_data['id']]
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -143,7 +145,7 @@ def main():
     irregular = summary[summary['condition']=='irregular']
     data = reverse_score(data, 'irregular')
 
-
+########## error here with winner and loser data.
     ## logistic regression to solve for BTL
     X, y = regression_format(data)
     q, r = lm(X, y)
@@ -163,7 +165,7 @@ def main():
     plot_bias(regular, irregular, colours)
     plot_coeffs([q, r], colours, labels=['q', 'r'])
     plt.show()
-
+    return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'q': q, 'r': r, 'paths': paths}
     
 if __name__ == '__main__':
-    main()
+    data = main()
