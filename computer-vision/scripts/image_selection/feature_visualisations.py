@@ -6,14 +6,10 @@ import logging
 
 
 def read_data(path):
-    data = pd.read_csv(path, delim_whitespace=True, header=0)#sep='\t', header=0)
-    return data
-
+    return pd.read_csv(path, delim_whitespace=True, header=0)#sep='\t', header=0)
 
 def get_txt(path):
-    t = pd.read_csv(path, header=0)
-    return t
-
+    return pd.read_csv(path, header=0)
 
 def show_images(images):
     f, ax = plt.subplots(1, len(images), figsize=(len(images)*1.5, 3))
@@ -23,18 +19,15 @@ def show_images(images):
         f.tight_layout()
     plt.show()
 
-
 def num_colours(colours):
     """ to be used inside apply ?? """
     colours = colours.strip('[]')
     n_colours = 0 if colours == ''  else len(colours.split(','))
     return n_colours
 
-
 def rm_extension(file_name):
     no_extension = file_name.split('.')[0]
     return no_extenstion
-
 
 def sample_data(y, n, sample_indices):
     loc = np.mean(y)
@@ -52,7 +45,6 @@ def sample_data(y, n, sample_indices):
     for i in sample_indices:
         sample_values.append(y[i])
     return sample_values, sample_indices
-
 
 def main(target_n=100, save_data=False):
     home_path = os.path.join(os.path.expanduser('~'), 'win_home', 'melanoma-identification')
@@ -138,7 +130,6 @@ def main(target_n=100, save_data=False):
 
     fig.tight_layout()
     plt.show()
-
 
 if __name__ == '__main__':
     # 10_000 images is roughly 80 participants -- see melanoma-identification/feature-rating/btl-simulation/scripts/run.py

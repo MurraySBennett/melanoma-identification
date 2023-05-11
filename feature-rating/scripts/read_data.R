@@ -3,13 +3,15 @@
 {
   rm(list=ls())
   library(BradleyTerry2)
+  library(BradleyTerryScalable)
+  library(reshape2)
   library(tidyverse)
-  library(furrr)
+  library(igraph)
 
   library(rstan)
   rstan_options(auto_write=TRUE) # stops rstan recompiling unchanged stan programs
-  no_cores <- availableCores() - 1
-  options(mc.cores = parallel::detectCores())
+  # no_cores <- availableCores() - 1
+  # options(mc.cores = parallel::detectCores())
 }
 
 
@@ -62,6 +64,63 @@ process_data <- function(f){
     df$total_trial = seq(1,nrow(df),1)
     return(df)
   }
+}
+
+to_cmat <- function(df){
+  img_left = df$img_left
+  img_right = df$img_right
+  response = df$response
+  
+  # Get unique image IDs and order them
+  img_ids <- sort(unique(c(img_left, img_right)))
+  
+  # Create empty matrix with ordered row and column names
+  img_matrix <- matrix(0, nrow=length(img_ids), ncol=length(img_ids), dimnames=list(img_ids, img_ids))
+  
+  # Fill in matrix with win counts
+  for (i in seq_along(response)) {
+    if (response[i] == 1) {
+      img_matrix[img_right[i], img_left[i]] <- img_matrix[img_right[i], img_left[i]] + 1
+    } else if (response[i] == 0) {
+      img_matrix[img_left[i], img_right[i]] <- img_matrix[img_left[i], img_right[i]] + 1
+    }
+  }
+  return(img_matrix)
+}
+
+to_long <- function(cmat){
+  df <- melt(cmat)
+  colnames(df) <- c("img1", "img2", "wins")
+  df <- as.data.frame(df)
+  
+  # create new data frame
+  df2 <- data.frame(img1 = character(),
+                    img2 = character(),
+                    win1 = integer(),
+                    win2 = integer(),
+                    stringsAsFactors = FALSE)
+  
+  # loop through combinations of images
+  for(i in 1:nrow(df)) {
+    for(j in 1:nrow(df)) {
+      # skip if comparing same img
+      if(df[i, "img1"] == df[j, "img2"]) {
+        next
+      }
+      # compare img1 to img2
+      if(df[i, "img1"] == df[j, "img1"]) {
+        new_row <- data.frame(journal1 = df[i, "img2"],
+                              journal2 = df[j, "img2"],
+                              win1 = df[i, "wins"],
+                              win2 = df[j, "wins"])
+        df2 <- rbind(df2, new_row)
+      }
+    }
+  }
+  
+  # reset row names
+  row.names(df2) <- NULL
+  return(df2)
 }
 
 id_to_int <- function(img_left, img_right){
@@ -170,47 +229,86 @@ get_combination_wins <- function(data) {
   # data_irr$right_id <- irr_id$img_right_id
 }
 
-## Prepare data
+
+## stan model data
 {
-  df <- data_reg %>% 
-    mutate(img1 = ifelse(img_left < img_right, img_left, img_right),
-           img2 = ifelse(img_left > img_right, img_left, img_right))
+  # n_images = length(unique(c(data_reg$img_left, data_reg$img_right)))
+  # n_trials = length(data_reg$img_left)
+  # 
+  # setwd(path$model)
+  # mle_model <- stan_model("individual-uniform.stan")
+  # model_data <-
+  #   list(K = n_images,
+  #        N = n_trials, # number of trials
+  #        player0 = data_reg$left_id,
+  #        player1 = data_reg$right_id,
+  #        y = data_reg$response
+  #   )
+  # mle_est <- optimizing(mle_model, data=model_data)
+  # alpha_star  <- mle_est$par[paste("alpha[", 1:n_images, "]", sep="")]
+  # ranked_mle <- mle_est$par[paste("ranked[", 1:n_images, "]",sep="")]
+  # rank_pred <- abs(rank(mle_est$par[paste("alpha[", 1:n_images, "]",sep="")]) - n_images)
+  # 
+  # setwd(path$home)
+}
+
+
+## bradley terry 2 model - journal example format
+{
+  # data_reg <- data
+  # data_reg[data_reg$condition=='irregular', 'response'] = abs(data_reg[data_reg$condition=='irregular', 'response'] - 1)
   
-  # Count the number of wins for each unique combination of img1 and img2
-  result <- df %>% 
-    group_by(img1, img2) %>% 
-    summarize(wins1 = sum(response == 0), wins2 = sum(response == 1)) %>% 
-    ungroup()
-}
-
-## model data
-{
-  n_images = length(unique(c(data_reg$img_left, data_reg$img_right)))
-  n_trials = length(data_reg$img_left)
-
-  setwd(path$model)
-  mle_model <- stan_model("individual-uniform.stan")
-  model_data <-
-    list(K = n_images,
-         N = n_trials, # number of trials
-         player0 = data_reg$left_id,
-         player1 = data_reg$right_id,
-         y = data_reg$response
-    )
-  mle_est <- optimizing(mle_model, data=model_data)
-  alpha_star  <- mle_est$par[paste("alpha[", 1:n_images, "]", sep="")]
-  ranked_mle <- mle_est$par[paste("ranked[", 1:n_images, "]",sep="")]
-  rank_pred <- abs(rank(mle_est$par[paste("alpha[", 1:n_images, "]",sep="")]) - n_images)
+  # img_matrix = to_cmat(data_reg)
   
-  setwd(path$home)
+  # data_long <- to_long(img_matrix)
+  
+  # bt2_model <- BTm(cbind(wins1, wins2), img1, img2, ~ img,
+                     # id = "img", data = data_long)
+   
 }
 
 
-## bradley terry model
+## bradley terry 2 model - lizard example format
 {
-
+  # data_reg <- data[data$condition=='regular', ]
+  # bt2_winner_loser <- data_reg[, c("winner", "loser")]
+  # bt2_wl_modle <- BTm(1, winner, loser,
+  #                 data = bt2_winner_loser)
 }
 
+
+## bradley terry scalable
+{
+  
+  data_reg <- data
+  data_reg[data_reg$condition=='irregular', 'response'] = abs(data_reg[data_reg$condition=='irregular', 'response'] - 1)
+  # img_left = data_reg$img_left
+  # img_right = data_reg$img_right
+  # response = data_reg$response
+  # 
+  # # Get unique image IDs and order them
+  # img_ids <- sort(unique(c(img_left, img_right)))
+  # 
+  # # Create empty matrix with ordered row and column names
+  # img_matrix <- matrix(0, nrow=length(img_ids), ncol=length(img_ids), dimnames=list(img_ids, img_ids))
+  # 
+  # # Fill in matrix with win counts
+  # for (i in seq_along(response)) {
+  #   if (response[i] == 1) {
+  #     img_matrix[img_right[i], img_left[i]] <- img_matrix[img_right[i], img_left[i]] + 1
+  #   } else if (response[i] == 0) {
+  #     img_matrix[img_left[i], img_right[i]] <- img_matrix[img_left[i], img_right[i]] + 1
+  #   }
+  # }
+  img_matrix = to_cmat(data_reg)
+  
+  # check how many times i beat j via: img_matrix[i, j]
+  bts_data <- btdata(img_matrix, return_graph = TRUE) 
+  summary(bts_data)
+  bts_fit = btfit(bts_data, a=1) # 1 if fully connect, > 1 if not fully connected which runs a bayesian method
+  summary(bts_fit)
+  # coef(bts_fit)
+ }
 
 ## plotting
 # plt_meanRT = ggplot(df_desc, aes(pnum, meanRT)) + 
