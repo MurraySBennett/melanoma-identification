@@ -72,9 +72,10 @@ def read_all(files):
 
 def process_shape(path, exp_ids):
     df = pd.read_csv(path, delim_whitespace=True, header=0)
-    df['isic_id'] = df['id'].apply(lambda i: i.split('.')[0])
-    filtered = df[df['isic_id'].isin(exp_ids)]
-    return filtered
+    df['isic_id'] = [x.strip('.png') for x in df['id']]
+
+    # filtered = df[df['isic_id'].isin(exp_ids)]
+    return df
     
      
 def regression_format(data):
@@ -101,11 +102,13 @@ def lm(X, y):
     l1_model.fit(X, y)
     q = sorted(list(zip(X.columns, l1_model.coef_[0])), key=lambda tup: tup[1], reverse=True)
     q = pd.Series([c for _, c in q], index=[t for t, _ in q])
+    print('q works')
 
     l2_model = LogisticRegression(penalty='l2', solver='liblinear', fit_intercept=True)
     l2_model.fit(X, y)
     r = sorted(list(zip(X.columns, l2_model.coef_[0])), key=lambda tup: tup[1], reverse=True)
     r = pd.Series([c for _, c in r], index=[t for t, _ in r])
+    print('r works')
     
     return q, r
 
@@ -116,7 +119,7 @@ def reverse_score(df, key):
 
 
 def main():
-    n_files = None
+    n_files = 5
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     paths = dict(
         home=home_path,
@@ -131,8 +134,7 @@ def main():
 
     image_ids  = sorted(list(set(data.winner) | set(data.loser)))
     ## import shape data
-    shape_data = pd.read_csv(os.path.join(paths['cv_data'], 'shape.txt'), delim_whitespace=True, header=0)
-    shape_data['isic_id'] = [x.strip('.png') for x in shape_data['id']]
+    # shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'),image_ids)
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
