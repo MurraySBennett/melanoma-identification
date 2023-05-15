@@ -1,14 +1,29 @@
 import os
 import glob
 import re
+import builtins
 import pandas as pd
 import numpy as np
+import scipy.stats
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
+# from scipy.stats import pearsonr, spearmanr
 
 from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
-from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_shape_coeffs
+from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr
 
+
+def get_vars():
+    global_vars = {}
+    for name, value in globals().items():
+        if name not in builtins.__dict__ and not name.startswith('__'):
+            var_info = {}
+            var_info["type"] = str(value.dtype) if isinstance(value, np.ndarray) else type(value).__name__
+            var_info["shape"] = np.shape(value) if isinstance(value, np.ndarray) else None
+            var_info["nans"] = np.isnan(value).any() if isinstance(value, np.ndarray) else False
+            global_vars[name] = var_info
+
+    return global_vars
 
 def process_data(file):
     """ read and organise data """
@@ -68,10 +83,8 @@ def read_all(files):
 
 def process_shape(path, exp_ids):
     df = pd.read_csv(path, delim_whitespace=True, header=0)
-    df['isic_id'] = [x.strip('.png') for x in df['id']]
-    # name_list = data['id'].tolist()
-    df = df[df['id'].isin(exp_ids)]
-    # filtered = df[df['isic_id'].isin(exp_ids)]
+    df['id'] = [x.strip('.png') for x in df['id']]
+    df = df[df['id'].isin(exp_ids)].reset_index(drop=True)
     return df
     
      
@@ -111,7 +124,7 @@ def reverse_score(df, key):
 
 
 def main():
-    n_files = 5
+    n_files = 10#None
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     paths = dict(
         home=home_path,
@@ -127,8 +140,9 @@ def main():
     image_ids  = sorted(list(set(data.winner) | set(data.loser)))
 
     ## import shape data
-    # shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
+    shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
     shape_data = shape_data.sort_values('id')
+ 
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -148,21 +162,37 @@ def main():
     X, y = regression_format(data)
     q = lm(X, y, penalty='l1')
     r = lm(X, y, penalty='l2')
+    q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
+    r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
+    ability = pd.merge(q, r, on='id', how='left')
+    merged = pd.merge(ability, shape_data, on='id', how='left')
 
-    # colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
+    ## correlation statistics
+    # sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
+    # valid_indices = ~np.isnan(merged['r']) & ~np.isnan(merged['compact'])
+    # x = merged['r'][valid_indices]
+    # y = merged['compact'][valid_indices]
+    # p_rho, p_p = pearsonr(x,y)
+    # print(sp_rho, sp_p)
+    # print(p_rho, p_p)
 
     ## Plotting
+    # colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
     #https://colorhunt.co/palettes/retro
-    colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
+    # colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
+    colours = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']
     set_style(colour_list=colours, fontsize=14)
 
-    plt_rt(regular, irregular, colours)
-    plt_bias(regular, irregular, colours)
-    plt_coeffs([q, r], colours, labels=['q', 'r'])
-    # plt_shape(shape_data['compact'], colours) 
-    # plt_shape_coeffs(shape_data, data, colours)
+    rt_fig, rt_ax = plt_rt(regular, irregular, colours)
+    bias_fig, bias_ax = plt_bias(regular, irregular, colours)
+    coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
+    c_ax.set_title("abilities")
+    shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
+    corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compactness', ylabel='Ability',colours=colours)
+
     plt.show()
-    return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'q': q, 'r': r, 'paths': paths}
+
+    return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'paths': paths, 'ability': ability, 'merged': merged}
     
 if __name__ == '__main__':
     data = main()
