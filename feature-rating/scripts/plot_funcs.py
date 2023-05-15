@@ -14,10 +14,8 @@ def set_style(colour_list, style='plasma', fontsize=12, spines=False):
 
 def plot_rt(reg, irr, colours):
     """ plot response time data """
-    fig_width = 4
-    fig_height = 4
-    n_rows = 1
-    n_cols = 2
+    n_rows, n_cols = 1, 2
+    fig_width, fig_height = 4*n_rows, 4*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
 
     ax[0].axhline(0, c=colours[3], lw=2, linestyle='-', zorder=0)
@@ -40,10 +38,8 @@ def plot_rt(reg, irr, colours):
 
 def plot_bias(reg, irr, colours):
     """ plot response position data """
-    fig_width = 4
-    fig_height = 4
-    n_rows = 1
-    n_cols = 2
+    n_rows, n_cols = 1, 2
+    fig_width, fig_height = 4*n_rows, 4*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
 
     ax[0].axhline(np.mean(reg['pos_bias']), c=colours[0], lw=2, linestyle='--')
@@ -61,14 +57,14 @@ def plot_bias(reg, irr, colours):
     # ax[1].legend()
     ax[1].set_title('position RT')
 
+
 def plot_coeffs(coeffs, colours, labels=None):
-    fig_width = 4
-    fig_height = 4
-    n_rows = 1
-    n_cols = 1
+    """ plot BTL coefficients """
+    n_rows, n_cols = 1, 1
+    fig_width, fig_height = 4*n_rows, 4*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
 
-    if len(coeffs) > 1:
+    if labels is not None:
         x = range(len(coeffs[0]))
         ax.scatter(x, coeffs[0], c=colours[0], s=40, alpha=0.6, label=labels[0])
         ax.scatter(x, coeffs[1], c=colours[1], s=40, alpha=0.6, label=labels[1])
@@ -76,4 +72,36 @@ def plot_coeffs(coeffs, colours, labels=None):
         x = range(len(coeffs))
         ax.scatter(x, coeffs, c=colours[0], s=40, alpha=0.6, label=labels)
     ax.legend() 
+
+
+def plt_shape(shape, colours, labels=None):
+    """ plot x-vision shape factor(s) """
+    n_rows, n_cols = 1, 1
+    fig_width, fig_height = 4*n_rows, 4*n_cols
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
+
+    if labels is not None:
+        x = range(len(shape[0]))
+        counter = 0
+        for s in shape:
+            ax.scatter(x, s, c=colours[counter], s=40, alpha=0.6, label=labels[counter])
+            counter += 1
+    else:
+        x = range(len(shape))
+        ax.scatter(x, shape, c=colours[0], s=40, alpha=0.6, label=labels)
+    ax.legend() 
+
+def plt_shape_coeffs(shape, coeffs, colours):
+    """ plot correlation b/w c-vision shape and BTL """
+    n_rows, n_cols = 1, 1
+    fig_width, fig_height = 4*n_rows, 4*n_cols
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_width*n_cols,fig_height*n_rows))
+
+    shape = shape.sort_values('id')
+    coeffs = coeffs.sort_values('isic_id')
+    x = shape['compact']
+    y = coeffs['coeff']
+    ax.scatter(x, y, c=colours[0], s=40, alpha=0.8)
+    ax.set_xlabel('Shape Factor')
+    ax.set_ylabel('Strength Coeff')
 

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 
 from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
-from plot_funcs import set_style, plot_rt, plot_bias, plot_coeffs
+from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_shape_coeffs
 
 
 def process_data(file):
@@ -43,17 +43,12 @@ def process_data(file):
         
         df['winner'] = [x.replace('.JPG', '') for x in df['winner']]
         df['loser'] = [x.replace('.JPG', '') for x in df['loser']]
+        df['img_left'] = [x.replace('.JPG', '') for x in df['img_left']]
+        df['img_right'] = [x.replace('.JPG', '') for x in df['img_right']]
 
-        # df['img_right'] = [i.split('.')[0] for i in df['img_right']]
-        # df['winner'] = [i.split('.')[0] for i in df['winner'] if i is not None else np.nan]
-        # df['loser'] = [i.split('.')[0] for i in df['loser'] if i is not None else np.nan]
-
-    # if df.shape[0] == 0):
-        # return None
-    # else:
         duplicates = df.duplicated(subset=['blockNo', 'trialNo'], keep=False)
         df = df[~duplicates]
-        # df['total_trial']=list(range(1,len(df)+1))
+
         df.dropna()
         df = df[data_columns].reset_index(drop=True)
         return df
@@ -70,10 +65,12 @@ def read_all(files):
     df['pnum'] = grouped_df.ngroup()
     return df
 
+
 def process_shape(path, exp_ids):
     df = pd.read_csv(path, delim_whitespace=True, header=0)
     df['isic_id'] = [x.strip('.png') for x in df['id']]
-
+    # name_list = data['id'].tolist()
+    df = df[df['id'].isin(exp_ids)]
     # filtered = df[df['isic_id'].isin(exp_ids)]
     return df
     
@@ -97,20 +94,15 @@ def regression_format(data):
     return X, y
 
 
-def lm(X, y):
-    l1_model = LogisticRegression(penalty='l1', solver='liblinear', fit_intercept=True)
-    l1_model.fit(X, y)
-    q = sorted(list(zip(X.columns, l1_model.coef_[0])), key=lambda tup: tup[1], reverse=True)
+def lm(X, y, penalty='l1'):
+    if penalty == 'l1':
+        model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
+    else:
+        model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
+    model.fit(X, y)
+    q = sorted(list(zip(X.columns, model.coef_[0])), key=lambda tup: tup[1], reverse=True)
     q = pd.Series([c for _, c in q], index=[t for t, _ in q])
-    print('q works')
-
-    l2_model = LogisticRegression(penalty='l2', solver='liblinear', fit_intercept=True)
-    l2_model.fit(X, y)
-    r = sorted(list(zip(X.columns, l2_model.coef_[0])), key=lambda tup: tup[1], reverse=True)
-    r = pd.Series([c for _, c in r], index=[t for t, _ in r])
-    print('r works')
-    
-    return q, r
+    return q
 
 
 def reverse_score(df, key):
@@ -133,8 +125,10 @@ def main():
     data = read_all(files)
 
     image_ids  = sorted(list(set(data.winner) | set(data.loser)))
+
     ## import shape data
-    # shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'),image_ids)
+    # shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
+    shape_data = shape_data.sort_values('id')
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -142,20 +136,19 @@ def main():
         }).reset_index()
     summary.columns = [col[1] if col[1] else col[0] for col in summary.columns]
 
+    pos_rt = data.groupby(['condition', 'pnum', 'response']).agg({
+        'duration': np.mean}).reset_index()
 
     regular = summary[summary['condition']=='regular']
     irregular = summary[summary['condition']=='irregular']
     data = reverse_score(data, 'irregular')
 
-########## error here with winner and loser data.
+    ###### error here with winner and loser data.
     ## logistic regression to solve for BTL
     X, y = regression_format(data)
-    q, r = lm(X, y)
+    q = lm(X, y, penalty='l1')
+    r = lm(X, y, penalty='l2')
 
-    # n_data = len(summary)
-    # n_reg = len(regular)
-    # n_irr = len(irregular)
-    
     # colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
 
     ## Plotting
@@ -163,9 +156,11 @@ def main():
     colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
     set_style(colour_list=colours, fontsize=14)
 
-    plot_rt(regular, irregular, colours)
-    plot_bias(regular, irregular, colours)
-    plot_coeffs([q, r], colours, labels=['q', 'r'])
+    plt_rt(regular, irregular, colours)
+    plt_bias(regular, irregular, colours)
+    plt_coeffs([q, r], colours, labels=['q', 'r'])
+    # plt_shape(shape_data['compact'], colours) 
+    # plt_shape_coeffs(shape_data, data, colours)
     plt.show()
     return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'q': q, 'r': r, 'paths': paths}
     
