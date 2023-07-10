@@ -115,7 +115,14 @@ def lm(X, y, penalty='l1'):
     model.fit(X, y)
     q = sorted(list(zip(X.columns, model.coef_[0])), key=lambda tup: tup[1], reverse=True)
     q = pd.Series([c for _, c in q], index=[t for t, _ in q])
-    return q
+
+    # Extract coefficients
+    coefficients = model.coef_[0]
+    # Calculate midpoint and slope
+    midpoint = -model.intercept_[0] / coefficients[0]
+    slope = -coefficients[0] / coefficients[1]
+
+    return q, midpoint, slope
 
 
 def reverse_score(df, key):
@@ -124,7 +131,7 @@ def reverse_score(df, key):
 
 
 def main():
-    n_files = 10#None
+    n_files = None
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     paths = dict(
         home=home_path,
@@ -160,13 +167,13 @@ def main():
     ###### error here with winner and loser data.
     ## logistic regression to solve for BTL
     X, y = regression_format(data)
-    q = lm(X, y, penalty='l1')
-    r = lm(X, y, penalty='l2')
+    q, q_mid, q_slope = lm(X, y, penalty='l1')
+    r, r_mid, r_slope = lm(X, y, penalty='l2')
     q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
     r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
     ability = pd.merge(q, r, on='id', how='left')
     merged = pd.merge(ability, shape_data, on='id', how='left')
-
+    
     ## correlation statistics
     # sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
     # valid_indices = ~np.isnan(merged['r']) & ~np.isnan(merged['compact'])

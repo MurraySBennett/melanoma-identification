@@ -91,10 +91,11 @@ def plt_shape(shape, colours, labels=None):
             ax.scatter(x, y, c=colours[counter], s=40, alpha=0.6, label=labels[counter])
     else:
         x = range(len(shape))
-        y = shape
+        y = shape.sort_values()
         ax.scatter(x, y, c=colours[0], s=40, alpha=0.6, label='Shape')
     ax.legend() 
     return fig, ax
+
 
 def check_sig(stat, p_value, alpha, direction = 'lt'):
     """ check significance level, and add star for printing """
@@ -117,7 +118,6 @@ def get_fig_pos(data, fig_pos):
 
 def plt_corr(x, y, xlabel, ylabel, colours):
     """ plot correlation b/w c-vision shape and BTL """
-
     sp_rho, sp_p = spearmanr(x, y, nan_policy='omit')
     valid_indices = ~np.isnan(x) & ~np.isnan(y)
     x = x[valid_indices]
@@ -130,10 +130,11 @@ def plt_corr(x, y, xlabel, ylabel, colours):
     fig_width, fig_height = 4*n_rows, 4*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_height,fig_width))
 
-    ax.scatter(x, y, c=colours[0], s=40, alpha=0.8)
-    ax.text(get_fig_pos(x, 20), get_fig_pos(y, 80), p_text, fontsize=12, color='black')
-    ax.text(get_fig_pos(x, 20), get_fig_pos(y, 75), sp_text, fontsize=12, color='black')
+    ax.scatter(x, y, c=colours[0], s=5, alpha=0.5)
+    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 85), p_text, fontsize=12, color='black')
+    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 80), sp_text, fontsize=12, color='black')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     return fig, ax
+
 
