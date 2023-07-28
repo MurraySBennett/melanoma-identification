@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 # from scipy.stats import pearsonr, spearmanr
 
 from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
-from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr
+from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr, shape_dist
 
 
 def get_vars():
@@ -137,7 +137,8 @@ def main():
         home=home_path,
         data=os.path.join(home_path, "feature-rating", "experiment", "melanoma-2afc", "data"),
         cv_data=os.path.join(home_path, "computer-vision", "scripts", "feature-analysis"),
-        figures=os.path.join(home_path, "feature-rating", "figures")
+        figures=os.path.join(home_path, "feature-rating", "figures"),
+        mel_id=os.path.join(home_path, "computer-vision", "scripts", "image_selection")
         )
     files=glob.glob(os.path.join(paths['data'], '*.csv'))
     if n_files is not None:
@@ -149,7 +150,10 @@ def main():
     ## import shape data
     shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
     shape_data = shape_data.sort_values('id')
- 
+
+    ## imnport melanoma IDs
+    melanoma_ids = pd.read_csv(os.path.join(paths['mel_id'], 'malignant_ids.txt'))
+    
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -173,6 +177,7 @@ def main():
     r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
     ability = pd.merge(q, r, on='id', how='left')
     merged = pd.merge(ability, shape_data, on='id', how='left')
+    merged = pd.merge(merged, melanoma_ids, on='id', how='left')
     
     ## correlation statistics
     # sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
@@ -187,16 +192,23 @@ def main():
     # colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
     #https://colorhunt.co/palettes/retro
     # colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
-    colours = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']
+    colours = ['#377eb8', '#e41a1c', '#4daf4a', '#984ea3', '#ff7f00']
     set_style(colour_list=colours, fontsize=14)
 
-    rt_fig, rt_ax = plt_rt(regular, irregular, colours)
-    bias_fig, bias_ax = plt_bias(regular, irregular, colours)
-    coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
-    c_ax.set_title("abilities")
-    shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
-    corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compactness', ylabel='Ability',colours=colours)
+    # rt_fig, rt_ax = plt_rt(regular, irregular, colours)
+    # bias_fig, bias_ax = plt_bias(regular, irregular, colours)
+    # coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
+    coeff_fig, c_ax = plt_coeffs(ability['r'], colours)
+    c_ax.set_title("Ranked Ability")
+    c_ax.set_ylabel("Ability")
+    c_ax.set_xlabel("Rank")
 
+    shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
+    shape_hist_fig, shape_hist_fig = shape_dist(merged, colours, grouped=True)
+
+    corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compact Factor', ylabel='Ability',colours=colours)
+
+    plt.tight_layout()
     plt.show()
 
     return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'paths': paths, 'ability': ability, 'merged': merged}

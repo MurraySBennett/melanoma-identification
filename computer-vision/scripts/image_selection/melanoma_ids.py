@@ -17,7 +17,7 @@ def main(save_data=False):
     
     print(data.head())
     if save_data:
-        np.savetxt(r'malignant_ids.txt', data, fmt='%s,%s,%s', header='isic_id,b-m,malignant',comments='')
+        np.savetxt(r'malignant_ids.txt', data, fmt='%s,%s,%s', header='id,b_m,malignant',comments='')
 
 
 if __name__ == '__main__':

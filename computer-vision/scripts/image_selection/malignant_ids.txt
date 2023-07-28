@@ -1,4 +1,4 @@
-isic_id,b-m,malignant
+id,b_m,malignant
 ISIC_3491559,benign,0
 ISIC_3622379,benign,0
 ISIC_2443008,malignant,1

@@ -63,38 +63,82 @@ def plt_bias(reg, irr, colours):
 def plt_coeffs(coeffs, colours, labels=None):
     """ plot BTL coefficients """
     n_rows, n_cols = 1, 1
-    fig_width, fig_height = 4*n_rows, 4*n_cols
+    fig_width, fig_height = 6*n_rows, 6*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_height,fig_width))
 
     if labels is not None:
         for counter, y in enumerate(coeffs):
-            x = range(len(y))
+            x = range(len(y), 0, -1)
             y = y.sort_values()
             ax.scatter(x, y, c=colours[counter], s=40, alpha=0.6, label=labels[counter])
+        ax.set_xlim(0, len(y))
+        ax.legend() 
     else:
-        x = range(len(coeffs))
+        x = range(len(coeffs), 0, -1)
         y = coeffs.sort_values()
-        ax.scatter(x, y, c=colours[0], s=40, alpha=0.6, label='Coeff')
-    ax.legend() 
+        ax.scatter(x, y, c=colours[0], s=40, alpha=0.6)
+        ax.set_xlim(0, len(coeffs))
+
+    ax.set_ylim(-2, 2)
+    ax.set_yticks([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
+    ax.set_yticklabels(['-2', '-1.5', '-1', '-0.5', '0', '0.5', '1', '1.5', '2'])
+
+    ax.set_xticks([1, 2500, 5000, 7500, 10000])
+
     return fig, ax
 
 
 def plt_shape(shape, colours, labels=None):
     """ plot x-vision shape factor(s) """
     n_rows, n_cols = 1, 1
-    fig_width, fig_height = 4*n_rows, 4*n_cols
+    fig_width, fig_height = 6*n_rows, 6*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_height,fig_width))
 
     if labels is not None:
-        x = range(len(shape[0]))
+        x = range(len(shape[0]), 0, -1)
         for counter, y in enumerate(shape):
             ax.scatter(x, y, c=colours[counter], s=40, alpha=0.6, label=labels[counter])
+        ax.set_xlim(0, len(shape[0]))
+        ax.legend() 
     else:
-        x = range(len(shape))
+        x = range(len(shape), 0, -1)
         y = shape.sort_values()
-        ax.scatter(x, y, c=colours[0], s=40, alpha=0.6, label='Shape')
-    ax.legend() 
+        ax.scatter(x, y, c=colours[0], s=40, alpha=0.6)
+        ax.set_xlim(0, len(shape))
+
+    ax.set_ylabel('Compact Factor')
+    ax.set_ylim(0, 1)
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+    ax.set_yticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'])
+
+    ax.set_xlabel('Image Rank')
+    ax.set_xticks([1, 2500, 5000, 7500, 10000])
+
     return fig, ax
+
+def shape_dist(shape, colours, grouped=False):
+    """ plot distribution of shape factors for melanoma and non-melanoma values """
+    n_rows, n_cols = 1, 1
+    fig_width, fig_height = 6*n_rows, 6*n_cols
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_height, fig_width))
+
+    edges = np.arange(0, 1.1, 0.1)
+    if grouped:
+        shape_benign=shape[shape['b_m'] == 'benign']
+        shape_malignant=shape[shape['b_m'] == 'malignant']
+
+        ax.hist(shape_benign['compact'], bins=edges, alpha=0.7, color=colours[0], edgecolor='black', label='Benign')#, density=True)
+        ax.hist(shape_malignant['compact'], bins=edges, alpha=0.7, color=colours[1], edgecolor='black', label='Melanoma')#, density=True)
+        ax.legend()
+    else:
+        ax.hist(shape, bins=edges, alpha=0.7, color=colours[0], edgecolor='black', label='Safe')#, density=True)
+
+    
+    ax.set_xlabel('Compact Factor')
+    ax.set_ylabel('Frequency')
+
+    return fig, ax
+
 
 
 def check_sig(stat, p_value, alpha, direction = 'lt'):
@@ -127,14 +171,22 @@ def plt_corr(x, y, xlabel, ylabel, colours):
     p_text = r"$\rho_p = {}$".format(check_sig(p_rho, p_p,  0.05))
 
     n_rows, n_cols = 1, 1
-    fig_width, fig_height = 4*n_rows, 4*n_cols
+    fig_width, fig_height = 6*n_rows, 6*n_cols
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(fig_height,fig_width))
 
     ax.scatter(x, y, c=colours[0], s=5, alpha=0.5)
-    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 85), p_text, fontsize=12, color='black')
-    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 80), sp_text, fontsize=12, color='black')
+    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 95), p_text, fontsize=12, color='black')
+    ax.text(get_fig_pos(x, 10), get_fig_pos(y, 90), sp_text, fontsize=12, color='black')
+
     ax.set_xlabel(xlabel)
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
+    ax.set_xticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'])
+
     ax.set_ylabel(ylabel)
+    ax.set_ylim(-2, 2)
+    ax.set_yticks([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2])
+    ax.set_yticklabels(['-2', '-1.5', '-1', '-0.5', '0', '0.5', '1', '1.5', '2'])
     return fig, ax
 
 
