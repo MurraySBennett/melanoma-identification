@@ -21,4 +21,11 @@ venv/
 *shape.txt
 *.mp4
 computer-vision/ISIC-melanoma-segmentation/
-
+feature-rating/experiment/melanoma-2afc/
+# latex files
+*.blg
+*.fls
+*.synctex*
+*.aux
+*.fdb_latexmk
+*.bbl
