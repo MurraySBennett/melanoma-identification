@@ -8,10 +8,10 @@ writing/General Recognition Theory for Enhanced Melanoma Identification.docx
 *.png
 .Rproj.user
 *.pyc
-venv/
 *.pickle
 *.xlsx
 .venv
+venv
 .samvenv
 *.log
 *.pth
@@ -29,3 +29,6 @@ feature-rating/experiment/melanoma-2afc/
 *.aux
 *.fdb_latexmk
 *.bbl
+*.out
+*.pdf
+
