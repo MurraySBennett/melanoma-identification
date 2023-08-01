@@ -31,4 +31,4 @@ feature-rating/experiment/melanoma-2afc/
 *.bbl
 *.out
 *.pdf
-
+*.ttl
