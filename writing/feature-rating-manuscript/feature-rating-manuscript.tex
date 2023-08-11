@@ -98,15 +98,52 @@ How does a GRT representation actually map to human perception?
 \section{Methods}
 \subsection{Participants}
 
+\subsection{Design}
+We recorded the competitors in each trial, the winner and loser, and the response time for the decision. The experiment was divided into 4 conditions by isolating two dimensions of interest: border regularity and colour, then accessing each dimension from opposite ends of the feature scale. For example, colour was identified as a meaningful dimension, so participants were presented image pairs and in one condition, asked which was the \textit{colourful} whereas in another condition were asked which lesion had the more \textit{uniform} colour. Similarly, participants were asked to assess border irregularity in one condition and border consistency in another.
+\
 \subsection{Materials}
-Images were selected from the International Skin Imaging Collaboration archive (ISIC). The ISIC archive contained approximately $72, 000$ images at time of retrieval (April, 2023). Metadata that included melanoma status, unique lesion identification numbers, and various patient demographic information accompanied all images. Duplicate images were removed (see \cite{cassidy2022analysis}). We subjected the remaining $x$ images to our computer-vision pipeline (see following section), thus producing computer-vision measures of asymmetry, border regularity, and colour variance for all images. We then ranked the images and sorted according to the computer-vision assessments of border regularity. All $n$ skin lesions classified as melanoma were included for the experiment sample. The remaining $10,000 - n$ images were selected from the ranked image set via random-normal sampling.
-
+Images were selected from the International Skin Imaging Collaboration archive (ISIC). The ISIC archive contained approximately $71, 671$ images at time of retrieval (February, 2023). Metadata that included melanoma status, unique lesion identification numbers, and various patient demographic information accompanied all images. Duplicate images were removed ($n = 860$; see \cite{cassidy2022analysis}). We subjected the remaining $70, 611$ images to our computer-vision pipeline (see Analysis section), thus producing computer-vision measures of asymmetry, border regularity, and colour variance for all images. We then ranked the images and sorted according to the computer-vision assessments of border regularity. Images with border regularity scores greater than 0.9 or less than 0.1 were excluded. All $n$ remaining skin lesions with a melanoma diagnosis were included for the experiment sample, and the remaining $10,000 - n$ images were selected from the ranked image set via random-normal sampling to produce a final stimulus set size of $10, 000$ images. Images presented during the experiment were first rotated as required to present the longest image border along the horizontal axis then resized to $512\times384$px. 
 
 \subsection{Procedure}
 
 \subsection{Analysis}
+\subsubsection{Computer Vision Pipeline}%
+We applied a segmentation algorithm to all images prior to shape and colour assessments. PROVIDE DETAILS ON: Images were resized to $256\times192$px, image smoothing, hair/artefact removal, colour transformation, canny edge detection, 
+
+I would suggest googling some of these functions to help clarify the process. You should also generate a separate document that specifies this procedure, and ensure that it's recreatable. Further, upload this to OSF.
+
+1. hair removal
+    a. grayscale
+    b. blackhat morphological filtering -- (morphologyEx(cv.MORPH_BLACKHAT,...)
+    c. closing -- morphologyEx(cv.MORPH_CLOSE,..)
+    d. gaussian blurring
+    e. intensify the idnetified hair/artefact contours for inpainting
+    f. inpaint -- cv.inpaint(..,..,.., cv.INPAINT_TELEA)
+2. colour clustering
+    a. cv.medianBlur()
+    b. kmeans cluster the image to 7 clusters.
+3. clahe colour transformation -- contrast limited adaptive histogram equalisation
+    a.  cv.createCLAHE
+    b. convert to HSV
+    c. apply clahe to each colour layer (H, S, and V)
+    d. recombine layers and convert back to BGR colour space.
+4. otsu segment
+    a. otsu_thresh
+        i. convert BGR to HSV (3d. not required)
+        ii. use only the saturation and value layers.
+        iii. apply gaussian blur
+        iv. threshold the image using cv.threshold(img, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        v. canny edge detection -- cv.Canny(threshold, 100, 200)
+        vi. dilate the contours to 'smooth' -- cv.dilate(canny_edge, kernel, iters=1)
+    b. extract largest contour
+    c. retrieve contour mask
+
+\subsubsection{Bradley-Terry-Luce Model}%
+\label{ssub:Bradley-Terry-Luce Model}
+
 
 \section{Results}
+
 
 \section{Discussion}
 

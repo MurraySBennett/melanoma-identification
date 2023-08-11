@@ -208,3 +208,4 @@ def otsu_segment(img, enhanced):
     largest_contour = get_contours(canny_otsu)
     otsu_mask = contour_mask(img, largest_contour)
     return otsu_mask
+
