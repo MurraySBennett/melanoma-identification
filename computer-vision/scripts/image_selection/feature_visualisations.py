@@ -132,7 +132,7 @@ def main(target_n=100, save_data=False):
     plt.show()
 
 if __name__ == '__main__':
-    # 10_000 images is roughly 80 participants -- see melanoma-identification/feature-rating/btl-simulation/scripts/run.py
+    # 10_000 images is roughly 40,500 trials, or 80 participants completing 500 trials -- see melanoma-identification/feature-rating/btl-simulation/scripts/run.py
     target_n = 10000
     save_data = True
     main(target_n, save_data)
