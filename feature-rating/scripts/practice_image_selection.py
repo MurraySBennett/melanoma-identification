@@ -9,6 +9,13 @@ def read_shape(path):
     df['id'] = [x.strip('.png') for x in df['id']]
     return df
 
+
+def read_colour(path):
+    df = pd.read_csv(path, delim_whitespace=True, header=0)
+    df['id'] = [x.strip('.JPG') for x in df['id']]
+    return df
+     
+
 def rm_exp_images(data, exp_imgs):
     merge = data.merge(exp_imgs, on='id', how='outer', indicator=True)
     df = merge[merge['_merge']=='left_only']
@@ -34,9 +41,15 @@ def main():
     exp_images = load_exp_images(os.path.join(paths['exp_img'], 'feature-rating-image-list.txt'))
     shape_data = read_shape(os.path.join(paths['cv_data'], 'shape.txt'))
     shape_data = shape_data.sort_values('id')
+    colour_data = read_colour(os.path.join(paths['cv_data'], 'colours_continuous.txt'))
+    colour_data = colour_data.sort_values('id')
     melanoma_ids = pd.read_csv(os.path.join(paths['mel_id'], 'malignant_ids.txt'))
 
     data = rm_exp_images(shape_data, exp_images)
+    data = pd.merge(data, colour_data, on='id')
+    data = pd.merge(data, melanoma_ids, on='id')
+
+    # new calculations
     data['sym_combined'] = data['x_sym'] + data['y_sym']
     
     # filter top and bottom 10% of data based on compactness
@@ -47,7 +60,7 @@ def main():
 
     data = data.dropna().reset_index(drop=True)
     
-    # symmetry
+    # symmetry -- these images were selected before the colour variance measures were calculated and filtered
     data = data.sort_values('sym_combined')
     print('High symmetrical')
     print(data.head(n_images))
