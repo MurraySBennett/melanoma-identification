@@ -51,7 +51,9 @@ def main():
 
     # new calculations
     data['sym_combined'] = data['x_sym'] + data['y_sym']
-    
+    # this doesn't add much -- all three channels are pretty much identical.
+    data['coeff_mu'] = np.round((data['coeff_1'] + data['coeff_2'] + data['coeff_3']) / 3, 3)
+
     # filter top and bottom 10% of data based on compactness
     data.drop(data[data.compact < 0.1].index, inplace=True)
     # reduce range of the symmetry values -- many are affected by the dermoscopy image circle.
@@ -60,12 +62,22 @@ def main():
 
     data = data.dropna().reset_index(drop=True)
     
+    # summary = data.agg(
+    #         {
+    #             'rms': ['min','mean','median','max'],
+    #             'coeff_1': ['min','mean','median','max'],
+    #             'coeff_2': ['min','mean','median','max'],
+    #             'coeff_3': ['min','mean','median','max'],
+    #             'coeff_mu': ['min','mean','median','max']
+    #         })
+    # print(summary) 
+
     # symmetry -- these images were selected before the colour variance measures were calculated and filtered
-    data = data.sort_values('sym_combined')
-    print('High symmetrical')
-    print(data.head(n_images))
-    print('Low symmetry')
-    print(data.tail(n_images))
+    # data = data.sort_values('sym_combined')
+    # print('High symmetrical')
+    # print(data.head(n_images))
+    # print('Low symmetry')
+    # print(data.tail(n_images))
 
     # border
     # data = data.sort_values('compact')
@@ -75,12 +87,18 @@ def main():
     # print(data.tail(n_images))
 
     # colour -- when you have it
-
+    # print(data.describe())
+    # 25%  ~17% and 75% ~ 31
+    data.drop(data[data.rms < 15].index, inplace=True)
+    data.drop(data[data.rms > 30].index, inplace=True)
+    data = data.sort_values('rms')
+    print(data.head(n_images))
+    print(data.tail(n_images))
 
     colours = ['#377eb8', '#e41a1c', '#4daf4a', '#984ea3', '#ff7f00']
     set_style(colour_list=colours, fontsize=14)
 
-    return {'data': data}
+    return data
     
 if __name__ == '__main__':
     data = main()
