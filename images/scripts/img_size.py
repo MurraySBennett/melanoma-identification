@@ -42,8 +42,8 @@ def process_img(file_name):
     trim_pct = 1
     img = trim_border(img,trim_pct)   
 
-    # minimise dark corners
-    img = get_dca(img)[0]
+    # minimise dark corners -- removing this (1/9/2023) because I see a couple of images that shouldn't have been cropped. Perhaps the originals resized is as complex as it should be.
+    # img = get_dca(img)[0]
     
 
     h, w = img.shape[:2]
