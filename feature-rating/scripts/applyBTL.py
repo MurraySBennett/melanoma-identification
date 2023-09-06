@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from btl_funcs import regression_format, lm
 
-def main(feature):
+def main(feature, save_data):
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     data_path = path.join(home_path, "feature-rating", "btl-feature-data")
  
@@ -16,7 +16,6 @@ def main(feature):
         data = pd.read_csv(path.join(data_path, 'btl-colour.csv'))
     else:
         print("{feature} is invalid input. Please use 'symmetry', 'border', or 'colour'.")
-    print(data.head())
     ## logistic regression to solve for BTL
     X, y = regression_format(data)
     # q, q_mid, q_slope = lm(X, y, penalty='l1')
@@ -24,6 +23,9 @@ def main(feature):
     r, r_mid, r_slope = lm(X, y, penalty='l2')
     r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
     #ability = pd.merge(q, r, on='id', how='left')
+    if save_data:
+        r.to_csv(path.join(data_path, 'btl-scores-'+feature+'.csv'), index=False)
+
 
         
 
@@ -33,4 +35,5 @@ if __name__ == "__main__":
     # args = parser.parse_args()
     # main(args.feature)
     feature = 'symmetry'
-    main(feature)
+    save_data = True
+    main(feature, save_data)
