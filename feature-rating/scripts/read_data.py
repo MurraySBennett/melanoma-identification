@@ -1,4 +1,4 @@
-import os
+from os import path
 import glob
 import re
 import builtins
@@ -6,12 +6,11 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LogisticRegression
+import json
 # from scipy.stats import pearsonr, spearmanr
 
 from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
 from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr, shape_dist
-
 
 def get_vars():
     global_vars = {}
@@ -25,6 +24,17 @@ def get_vars():
 
     return global_vars
 
+
+def get_id(value, file):
+    try:
+        data = json.loads(value)
+        pID = data.get("participant")
+        return pID
+    except (json.JSONDecodeError, AttributeError):
+        print(f'{file} has ID issues')
+        return 'No_ID'
+
+
 def process_data(file):
     """ read and organise data """
     data_columns = [
@@ -33,22 +43,30 @@ def process_data(file):
     'img_left', 'img_right', 'winner', 'loser', 
     'duration', 'response', 'ended_on']
 
-    df = pd.read_csv(file)
+    try:
+        df = pd.read_csv(file)
+        if df.empty:
+            print(f'{file} contains no data')
+            return None
+    except pd.errors.EmptyDataError:
+        print(f'{file} is empty')
+        return None
 
-    id_search = re.compile(r'\d+')
-    pID = id_search.search(df['url'][0]).group()
+    # id_search = re.compile(r'\d+')
+    # pID = id_search.search(df['url'][0]).group()
+    pID = get_id(df['url'][0], file)
+
     condition = df['condition'][1]
 
-
-    if os.path.getsize(file) < 10_000:
+    if path.getsize(file) < 10_000:
+        print(f'{file} is an irregularly small file')
         return None
     
     try:
         df = df.loc[(df['sender']=='trial') & (df['practice']==False)]
     except Exception as e:
-        print(f'tried to filter {file}, participant {pID}, but {e}')
+        print(f'{file} has issues filtering out extranous senders: {e}')
         return None
-    # ignore if data is bad
     try: 
         df['pID'] = pID
         df['condition'] = condition
@@ -60,6 +78,7 @@ def process_data(file):
         df['loser'] = [x.replace('.JPG', '') for x in df['loser']]
         df['img_left'] = [x.replace('.JPG', '') for x in df['img_left']]
         df['img_right'] = [x.replace('.JPG', '') for x in df['img_right']]
+        df['duration'] = df['duration'] - 1500 # 1500ms used to load images. The ISI and cue are shown in this initial perdiod.
 
         duplicates = df.duplicated(subset=['blockNo', 'trialNo'], keep=False)
         df = df[~duplicates]
@@ -68,7 +87,7 @@ def process_data(file):
         df = df[data_columns].reset_index(drop=True)
         return df
     except Exception as e:    
-        print(f'file {file} is not a complete data set')
+        print(f'{file} has some issue that you need to come back into the code to inspect')
         return None
 
 
@@ -88,72 +107,36 @@ def process_shape(path, exp_ids):
     return df
     
      
-def regression_format(data):
-    def get_vector(r):
-        y = {'y': r.response}
-        v = {i: 0 for i in images}
-        v[r.img_left] = -1
-        v[r.img_right] = 1
-        return {**y, **v}
-
-    images  = sorted(list(set(data.winner) | set(data.loser)))
-    img2idx = {img: idx for idx, img in enumerate(images)}
-
-    X = pd.DataFrame(list(data.apply(get_vector, axis=1)))
-    X.fillna(0, inplace=True)
-    y = X.y
-    X = X[[c for c in X.columns if c != 'y']]
-
-    return X, y
-
-
-def lm(X, y, penalty='l1'):
-    if penalty == 'l1':
-        model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
-    else:
-        model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
-    model.fit(X, y)
-    q = sorted(list(zip(X.columns, model.coef_[0])), key=lambda tup: tup[1], reverse=True)
-    q = pd.Series([c for _, c in q], index=[t for t, _ in q])
-
-    # Extract coefficients
-    coefficients = model.coef_[0]
-    # Calculate midpoint and slope
-    midpoint = -model.intercept_[0] / coefficients[0]
-    slope = -coefficients[0] / coefficients[1]
-
-    return q, midpoint, slope
-
-
 def reverse_score(df, key):
     df.loc[df['condition'] == key, 'response'] = 1 - df.loc[df['condition'] == key, 'response']
     return df
 
 
 def main():
+    save_data = True
     n_files = None
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     paths = dict(
         home=home_path,
-        data=os.path.join(home_path, "feature-rating", "experiment", "melanoma-2afc", "data"),
-        cv_data=os.path.join(home_path, "computer-vision", "scripts", "feature-analysis"),
-        figures=os.path.join(home_path, "feature-rating", "figures"),
-        mel_id=os.path.join(home_path, "computer-vision", "scripts", "image_selection")
+        data=path.join(home_path, "feature-rating", "experiment", "melanoma-2afc", "data"),
+        cv_data=path.join(home_path, "computer-vision", "scripts", "feature-analysis"),
+        figures=path.join(home_path, "feature-rating", "figures"),
+        mel_id=path.join(home_path, "computer-vision", "scripts", "image_selection"),
+        btl_data=path.join(home_path, "feature-rating", "btl-feature-data")
         )
-    files=glob.glob(os.path.join(paths['data'], '*.csv'))
+    files=glob.glob(path.join(paths['data'], '*.csv'))
     if n_files is not None:
         files = files[:n_files]
     data = read_all(files)
 
-    image_ids  = sorted(list(set(data.winner) | set(data.loser)))
+    # image_ids  = sorted(list(set(data.winner) | set(data.loser)))
 
     ## import shape data
-    shape_data = process_shape(os.path.join(paths['cv_data'], 'shape.txt'), image_ids)
-    shape_data = shape_data.sort_values('id')
+    # shape_data = process_shape(path.join(paths['cv_data'], 'shape.txt'), image_ids)
+    # shape_data = shape_data.sort_values('id')
 
-    ## imnport melanoma IDs
-    melanoma_ids = pd.read_csv(os.path.join(paths['mel_id'], 'malignant_ids.txt'))
-    
+    ## import melanoma IDs
+    # melanoma_ids = pd.read_csv(path.join(paths['mel_id'], 'malignant_ids.txt'))
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -166,52 +149,70 @@ def main():
 
     regular = summary[summary['condition']=='regular']
     irregular = summary[summary['condition']=='irregular']
-    data = reverse_score(data, 'irregular')
+    if save_data:
+        data.to_csv(path.join(paths['btl_data'], 'data-raw.csv'), index=False) # raw == no score manipulations -- see data-processed.csv
+
+    data = data[data['ended_on'] == 'response']# remove timed-out responses
+    data = data[data['duration'] >= 300]
+    data = reverse_score(data, 'symmetry')
+    data = reverse_score(data, 'regular') # reverse score regular, so that victories are won by the irregular features. This gives consistency to the other features (A and B), but not the CV estimate (you reverse that, too)
+    data = reverse_score(data, 'uniform')
+
+    asymmetry = data[(data['condition'] == 'asymmetry') | (data['condition'] == 'symmetry')]
+    border = data[(data['condition'] == 'irregular') | (data['condition'] == 'regular')]
+    colour = data[(data['condition'] == 'colourful') | (data['condition'] == 'uniform')]
+
+    if save_data:
+        data.to_csv(path.join(paths['btl_data'], 'data-processed.csv'), index=False) # processed == reverse scored
+        asymmetry.to_csv(path.join(paths['btl_data'], 'btl-asymmetry.csv'), index=False)
+        border.to_csv(path.join(paths['btl_data'], 'btl-border.csv'), index=False)
+        colour.to_csv(path.join(paths['btl_data'], 'btl-colour.csv'), index=False)
 
     ###### error here with winner and loser data.
+
     ## logistic regression to solve for BTL
-    X, y = regression_format(data)
-    q, q_mid, q_slope = lm(X, y, penalty='l1')
-    r, r_mid, r_slope = lm(X, y, penalty='l2')
-    q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
-    r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
-    ability = pd.merge(q, r, on='id', how='left')
-    merged = pd.merge(ability, shape_data, on='id', how='left')
-    merged = pd.merge(merged, melanoma_ids, on='id', how='left')
+    #X, y = regression_format(data)
+    #q, q_mid, q_slope = lm(X, y, penalty='l1')
+    #r, r_mid, r_slope = lm(X, y, penalty='l2')
+    #q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
+    #r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
+    #ability = pd.merge(q, r, on='id', how='left')
+    #merged = pd.merge(ability, shape_data, on='id', how='left')
+    #merged = pd.merge(merged, melanoma_ids, on='id', how='left')
     
-    ## correlation statistics
-    # sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
-    # valid_indices = ~np.isnan(merged['r']) & ~np.isnan(merged['compact'])
-    # x = merged['r'][valid_indices]
-    # y = merged['compact'][valid_indices]
-    # p_rho, p_p = pearsonr(x,y)
-    # print(sp_rho, sp_p)
-    # print(p_rho, p_p)
+    ### correlation statistics
+    ## sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
+    ## valid_indices = ~np.isnan(merged['r']) & ~np.isnan(merged['compact'])
+    ## x = merged['r'][valid_indices]
+    ## y = merged['compact'][valid_indices]
+    ## p_rho, p_p = pearsonr(x,y)
+    ## print(sp_rho, sp_p)
+    ## print(p_rho, p_p)
 
-    ## Plotting
-    # colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
-    #https://colorhunt.co/palettes/retro
-    # colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
-    colours = ['#377eb8', '#e41a1c', '#4daf4a', '#984ea3', '#ff7f00']
-    set_style(colour_list=colours, fontsize=14)
+    ### Plotting
+    ## colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
+    ##https://colorhunt.co/palettes/retro
+    ## colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
+    #colours = ['#377eb8', '#e41a1c', '#4daf4a', '#984ea3', '#ff7f00']
+    #set_style(colour_list=colours, fontsize=14)
 
-    # rt_fig, rt_ax = plt_rt(regular, irregular, colours)
-    # bias_fig, bias_ax = plt_bias(regular, irregular, colours)
-    # coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
-    coeff_fig, c_ax = plt_coeffs(ability['r'], colours)
-    c_ax.set_title("Ranked Ability")
-    c_ax.set_ylabel("Ability")
-    c_ax.set_xlabel("Rank")
+    ## rt_fig, rt_ax = plt_rt(regular, irregular, colours)
+    ## bias_fig, bias_ax = plt_bias(regular, irregular, colours)
+    ## coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
+    #coeff_fig, c_ax = plt_coeffs(ability['r'], colours)
+    #c_ax.set_title("Ranked Ability")
+    #c_ax.set_ylabel("Ability")
+    #c_ax.set_xlabel("Rank")
 
-    shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
-    shape_hist_fig, shape_hist_fig = shape_dist(merged, colours, grouped=True)
+    #shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
+    #shape_hist_fig, shape_hist_fig = shape_dist(merged, colours, grouped=True)
 
-    corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compact Factor', ylabel='Ability',colours=colours)
+    #corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compact Factor', ylabel='Ability',colours=colours)
 
-    plt.tight_layout()
-    plt.show()
+    #plt.tight_layout()
+    #plt.show()
 
-    return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'paths': paths, 'ability': ability, 'merged': merged}
+    #return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'paths': paths, 'ability': ability, 'merged': merged}
     
 if __name__ == '__main__':
     data = main()
