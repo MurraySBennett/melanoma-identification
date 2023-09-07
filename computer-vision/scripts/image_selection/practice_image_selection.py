@@ -35,10 +35,9 @@ def main():
         cv_data=os.path.join(home_path, "computer-vision", "scripts", "feature-analysis"),
         figures=os.path.join(home_path, "feature-rating", "figures"),
         mel_id=os.path.join(home_path, "computer-vision", "scripts", "image_selection"),
-        exp_img=os.path.join(home_path, "images", "feature-rating-images")
         )
     
-    exp_images = load_exp_images(os.path.join(paths['exp_img'], 'feature-rating-image-list.txt'))
+    exp_images = load_exp_images(os.path.join(paths['mel_id'], 'feature-rating-image-list.txt'))
     shape_data = read_shape(os.path.join(paths['cv_data'], 'shape.txt'))
     shape_data = shape_data.sort_values('id')
     colour_data = read_colour(os.path.join(paths['cv_data'], 'colours_continuous.txt'))

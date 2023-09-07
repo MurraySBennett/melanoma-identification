@@ -31,7 +31,7 @@ def get_files(path, n_files):
 
 
 def process_img(file_name):
-    size = (512, 384)
+    size = (256, 192)
 
     save_path = os.path.join(os.getcwd(), "..", "resized")
     img_path = os.path.join(os.getcwd(),  "..", "ISIC-database")

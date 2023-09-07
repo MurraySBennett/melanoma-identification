@@ -81,9 +81,10 @@ def main(target_n=100, save_data=False):
     sample_values, sample_indices = sample_data(y, n=target_n, sample_indices=melanoma_idx)
     sampled_ids = shape_data['isic_id'][sample_indices]
     sampled_ids = sampled_ids.sort_values()
+    sampled_ids = [i+'.JPG' for i in sampled_ids['isic_id']]
 
     if save_data:
-        np.savetxt(r'sampled_shape_ids.txt', sampled_ids, fmt='%s', header='isic_id', comments='')
+        np.savetxt(r'feature-rating-image-list.txt', sampled_ids, fmt='%s', header='id', comments='')
     
     original_indices = []
     for i in sample_indices:
@@ -134,6 +135,6 @@ def main(target_n=100, save_data=False):
 if __name__ == '__main__':
     # 10_000 images is roughly 40,500 trials, or 80 participants completing 500 trials -- see melanoma-identification/feature-rating/btl-simulation/scripts/run.py
     target_n = 10000
-    save_data = True
+    save_data = False # you really should have set a random seed for this.
     main(target_n, save_data)
 
