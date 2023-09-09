@@ -9,14 +9,29 @@ def regression_format(data):
         v[r.img_right] = 1
         return {**y, **v}
 
-    images  = sorted(list(set(data.winner) | set(data.loser)))
-    img2idx = {img: idx for idx, img in enumerate(images)}
+    # images  = sorted(list(set(data.winner) | set(data.loser)))
+    # img2idx = {img: idx for idx, img in enumerate(images)}
 
     X = pd.DataFrame(list(data.apply(get_vector, axis=1)))
     X.fillna(0, inplace=True)
     y = X.y
     X = X[[c for c in X.columns if c != 'y']]
 
+    return X, y
+
+
+def sparse_format(data):
+    rows = []
+    for _, row in data.iterrows():
+        y = {'y': row.response}
+        v = {row.img_left: -1, row.img_right: 1}
+        rows.append({**y, **v})
+
+    X = pd.DataFrame(rows)
+    X.fillna(0, inplace=True)
+
+    y = X['y']
+    X = X.drop(columns=['y'])
     return X, y
 
 

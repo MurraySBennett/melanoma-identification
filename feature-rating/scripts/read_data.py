@@ -42,7 +42,6 @@ def process_data(file):
     'condition',  'blockNo', 'practice', 'trialNo', 
     'img_left', 'img_right', 'winner', 'loser', 
     'duration', 'response', 'ended_on']
-
     try:
         df = pd.read_csv(file)
         if df.empty:
@@ -51,6 +50,9 @@ def process_data(file):
     except pd.errors.EmptyDataError:
         print(f'{file} is empty')
         return None
+    if path.getsize(file) < 10_000:
+        print(f'{file} is an irregularly small file')
+        return None
 
     # id_search = re.compile(r'\d+')
     # pID = id_search.search(df['url'][0]).group()
@@ -58,9 +60,6 @@ def process_data(file):
 
     condition = df['condition'][1]
 
-    if path.getsize(file) < 10_000:
-        print(f'{file} is an irregularly small file')
-        return None
     
     try:
         df = df.loc[(df['sender']=='trial') & (df['practice']==False)]
@@ -68,20 +67,25 @@ def process_data(file):
         print(f'{file} has issues filtering out extranous senders: {e}')
         return None
     try: 
+
         df['pID'] = pID
         df['condition'] = condition
         df['response'] = df['response'].replace({'nan': np.nan, '0': 0, '1': 1}).astype('Int64')
+
         df['winner'] = df['winner'].astype('str')
         df['loser'] = df['loser'].astype('str')
-        
         df['winner'] = [x.replace('.JPG', '') for x in df['winner']]
         df['loser'] = [x.replace('.JPG', '') for x in df['loser']]
+
+
         df['img_left'] = [x.replace('.JPG', '') for x in df['img_left']]
         df['img_right'] = [x.replace('.JPG', '') for x in df['img_right']]
         df['duration'] = df['duration'] - 1500 # 1500ms used to load images. The ISI and cue are shown in this initial perdiod.
 
         duplicates = df.duplicated(subset=['blockNo', 'trialNo'], keep=False)
         df = df[~duplicates]
+        df = df[~(df['winner'] == 'nan')]
+        df = df[~(df['loser'] == 'nan')]
 
         df.dropna()
         df = df[data_columns].reset_index(drop=True)
@@ -112,10 +116,23 @@ def reverse_score(df, key):
     return df
 
 
+def return_trials_remaining(data):
+    target_trials = 40_500
+    participant =  400
+    conditions = data['condition'].unique()
+    n_participants = 0
+    for c in conditions:
+        df = data[data['condition'] == c]
+        remaining_participants = np.ceil(((target_trials//2) - len(df))/participant)
+        print(f'{c} has {len(df)}/{target_trials//2} trials. You need {remaining_participants} more participants.')
+        n_participants += remaining_participants
+    print(f'You have a total of {n_participants} remaining')
+
+
 def main():
-    save_data = True
+    save_data = False
     n_files = None
-    home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
+    home_path = path.join(path.expanduser('~'), 'win_home', 'melanoma-identification')
     paths = dict(
         home=home_path,
         data=path.join(home_path, "feature-rating", "experiment", "melanoma-2afc", "data"),
@@ -130,13 +147,6 @@ def main():
     data = read_all(files)
 
     # image_ids  = sorted(list(set(data.winner) | set(data.loser)))
-
-    ## import shape data
-    # shape_data = process_shape(path.join(paths['cv_data'], 'shape.txt'), image_ids)
-    # shape_data = shape_data.sort_values('id')
-
-    ## import melanoma IDs
-    # melanoma_ids = pd.read_csv(path.join(paths['mel_id'], 'malignant_ids.txt'))
 
     summary = data.groupby(['condition', 'pnum']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
@@ -162,57 +172,14 @@ def main():
     border = data[(data['condition'] == 'irregular') | (data['condition'] == 'regular')]
     colour = data[(data['condition'] == 'colourful') | (data['condition'] == 'uniform')]
 
+    return_trials_remaining(data)
+
     if save_data:
         data.to_csv(path.join(paths['btl_data'], 'data-processed.csv'), index=False) # processed == reverse scored
         asymmetry.to_csv(path.join(paths['btl_data'], 'btl-asymmetry.csv'), index=False)
         border.to_csv(path.join(paths['btl_data'], 'btl-border.csv'), index=False)
         colour.to_csv(path.join(paths['btl_data'], 'btl-colour.csv'), index=False)
 
-    ###### error here with winner and loser data.
-
-    ## logistic regression to solve for BTL
-    #X, y = regression_format(data)
-    #q, q_mid, q_slope = lm(X, y, penalty='l1')
-    #r, r_mid, r_slope = lm(X, y, penalty='l2')
-    #q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
-    #r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
-    #ability = pd.merge(q, r, on='id', how='left')
-    #merged = pd.merge(ability, shape_data, on='id', how='left')
-    #merged = pd.merge(merged, melanoma_ids, on='id', how='left')
-    
-    ### correlation statistics
-    ## sp_rho, sp_p = spearmanr(merged['r'], merged['compact'], nan_policy='omit')
-    ## valid_indices = ~np.isnan(merged['r']) & ~np.isnan(merged['compact'])
-    ## x = merged['r'][valid_indices]
-    ## y = merged['compact'][valid_indices]
-    ## p_rho, p_p = pearsonr(x,y)
-    ## print(sp_rho, sp_p)
-    ## print(p_rho, p_p)
-
-    ### Plotting
-    ## colours = ["#6BB8CC", "#C1534B", "#5FAD41", "#9C51B6", "#ED8B00", "#828282"]
-    ##https://colorhunt.co/palettes/retro
-    ## colours = ['#37E2D5', '#590696', '#C70A80', '#FBCB0A']
-    #colours = ['#377eb8', '#e41a1c', '#4daf4a', '#984ea3', '#ff7f00']
-    #set_style(colour_list=colours, fontsize=14)
-
-    ## rt_fig, rt_ax = plt_rt(regular, irregular, colours)
-    ## bias_fig, bias_ax = plt_bias(regular, irregular, colours)
-    ## coeff_fig, c_ax = plt_coeffs([ability['q'], ability['r']], colours, labels=['q', 'r'])
-    #coeff_fig, c_ax = plt_coeffs(ability['r'], colours)
-    #c_ax.set_title("Ranked Ability")
-    #c_ax.set_ylabel("Ability")
-    #c_ax.set_xlabel("Rank")
-
-    #shape_fig, shape_ax = plt_shape(merged['compact'], colours) 
-    #shape_hist_fig, shape_hist_fig = shape_dist(merged, colours, grouped=True)
-
-    #corr_fig, corr_ax = plt_corr(merged['compact'], merged['r'], xlabel='Compact Factor', ylabel='Ability',colours=colours)
-
-    #plt.tight_layout()
-    #plt.show()
-
-    #return {'data': data, 'summary': summary, 'image_ids': image_ids, 'shape_data': shape_data, 'paths': paths, 'ability': ability, 'merged': merged}
-    
+   
 if __name__ == '__main__':
     data = main()

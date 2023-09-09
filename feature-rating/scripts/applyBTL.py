@@ -2,7 +2,7 @@ from os import path
 import argparse
 import pandas as pd
 import numpy as np
-from btl_funcs import regression_format, lm
+from btl_funcs import regression_format, sparse_format, lm
 
 def main(feature, save_data):
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
@@ -17,7 +17,9 @@ def main(feature, save_data):
         # else:
         #     print("{f} is invalid input. Please use 'symmetry', 'border', or 'colour'.")
         ## logistic regression to solve for BTL
-        X, y = regression_format(data)
+        print(f'working on {f}')
+        # X, y = regression_format(data)
+        X, y = sparse_format(data)
         # q, q_mid, q_slope = lm(X, y, penalty='l1')
         #q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
         r, r_mid, r_slope = lm(X, y, penalty='l2')
