@@ -27,6 +27,7 @@ def main():
     z = df_summary["connected"]
    
     plot3d(x, y, z, pareto=df_pareto)
+    plt.savefig('btl_pareto.pdf', format='pdf', dpi=600, bbox_inches='tight')
     plt.show()
     
     print(df_pareto)

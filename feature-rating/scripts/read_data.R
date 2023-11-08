@@ -1,9 +1,8 @@
 ## packages
-
 {
   rm(list=ls())
   library(BradleyTerry2)
-  library(BradleyTerryScalable)
+  # library(BradleyTerryScalable)
   library(reshape2)
   library(tidyverse)
   library(igraph)

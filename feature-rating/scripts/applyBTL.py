@@ -1,5 +1,4 @@
 from os import path
-import argparse
 import pandas as pd
 import numpy as np
 from btl_funcs import regression_format, sparse_format, lm
@@ -7,27 +6,39 @@ from btl_funcs import regression_format, sparse_format, lm
 def main(feature, save_data):
     home_path = "/mnt/c/Users/qlm573/melanoma-identification/"
     data_path = path.join(home_path, "feature-rating", "btl-feature-data")
-    for f in feature: 
-        if f == "symmetry":
-            data = pd.read_csv(path.join(data_path, 'btl-asymmetry.csv'))
-        elif f == "border":
-            data = pd.read_csv(path.join(data_path, 'btl-border.csv'))
-        elif f == "colour":
-            data = pd.read_csv(path.join(data_path, 'btl-colour.csv'))
-        # else:
-        #     print("{f} is invalid input. Please use 'symmetry', 'border', or 'colour'.")
-        ## logistic regression to solve for BTL
-        print(f'working on {f}')
-        # X, y = regression_format(data)
-        X, y = sparse_format(data)
-        # q, q_mid, q_slope = lm(X, y, penalty='l1')
-        #q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
-        r, r_mid, r_slope = lm(X, y, penalty='l2')
-        r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
-        #ability = pd.merge(q, r, on='id', how='left')
-        if save_data:
-            r.to_csv(path.join(data_path, 'btl-scores-' + f + '.csv'), index=False)
+    if feature is not None:
+        for f in feature: 
+            if f == "symmetry":
+                data = pd.read_csv(path.join(data_path, 'btl-asymmetry.csv'))
+            elif f == "border":
+                data = pd.read_csv(path.join(data_path, 'btl-border.csv'))
+            elif f == "colour":
+                data = pd.read_csv(path.join(data_path, 'btl-colour.csv'))
+            # else:
+            #     print("{f} is invalid input. Please use 'symmetry', 'border', or 'colour'.")
+            ## logistic regression to solve for BTL
+            print(f'working on {f}')
+            # X, y = regression_format(data)
+            X, y = sparse_format(data)
+            # q, q_mid, q_slope = lm(X, y, penalty='l1')
+            #q = q.to_frame().reset_index().rename(columns={'index': 'id', 0: 'q'})
+            r, r_mid, r_slope = lm(X, y, penalty='l2')
+            r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'pi'})
+            #ability = pd.merge(q, r, on='id', how='left')
+    
+            print(f"slope: {r_slope}, midpoint: {r_mid}")
+           # results, coef, q = pql(X, y)
 
+            if save_data:
+                r.to_csv(path.join(data_path, 'btl-scores-' + f + '.csv'), index=False)
+   
+    # print('working on ugly')
+    # data = pd.read_csv(path.join(data_path, 'data-processed.csv'))
+    # X, y = sparse_format(data)
+    # r, r_mid, r_slope = lm(X, y, penalty='l2')
+    # r = r.to_frame().reset_index().rename(columns={'index': 'id', 0: 'r'})
+    # if save_data:
+    #     r.to_csv(path.join(data_path, 'btl-scores-global.csv'), index=False)
 
         
 
@@ -39,3 +50,9 @@ if __name__ == "__main__":
     feature = ["symmetry", "border", "colour"]
     save_data = True
     main(feature, save_data)
+
+
+# https://www.google.com/search?q=perceptual+rating+of+melanoma+features+human+perception+judgment&sca_esv=564367827&ei=vTL_ZOfWBY_W5NoP1P-wuAU&ved=0ahUKEwinqdef8KKBAxUPK1kFHdQ_DFcQ4dUDCBA&uact=5&oq=perceptual+rating+of+melanoma+features+human+perception+judgment&gs_lp=Egxnd3Mtd2l6LXNlcnAiQHBlcmNlcHR1YWwgcmF0aW5nIG9mIG1lbGFub21hIGZlYXR1cmVzIGh1bWFuIHBlcmNlcHRpb24ganVkZ21lbnRIxEBQkRFYzDVwB3gBkAEBmAHCAaAB-xeqAQQ2LjIxuAEDyAEA-AEBwgIKEAAYRxjWBBiwA8ICCBAAGIkFGKIEwgIFEAAYogTiAwQYACBBiAYBkAYI&sclient=gws-wiz-serp
+# https://www.mdpi.com/2075-1729/13/4/974
+# https://academic.oup.com/milmed/article/185/3-4/506/5607587
+# https://scholar.google.com/scholar?hl=en&as_sdt=0%2C44&q=human+judgment+melanoma+features+costly+time+and+financial&btnG=

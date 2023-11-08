@@ -1,5 +1,7 @@
 from sklearn.linear_model import LogisticRegression
 import pandas as pd
+import numpy as np
+
 
 def regression_format(data):
     def get_vector(r):
@@ -35,21 +37,33 @@ def sparse_format(data):
     return X, y
 
 
+def sigmoid(dec_func_values):
+    return 1 / (1 + np.exp(-dec_func_values))
+
+
 def lm(X, y, penalty='l1'):
     if penalty == 'l1':
         model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
     else:
         model = LogisticRegression(penalty=penalty, solver='liblinear', fit_intercept=True)
+
     model.fit(X, y)
+
     q = sorted(list(zip(X.columns, model.coef_[0])), key=lambda tup: tup[1], reverse=True)
     q = pd.Series([c for _, c in q], index=[t for t, _ in q])
 
     # Extract coefficients
     coefficients = model.coef_[0]
+    # standard errors using inverse of Hessian Matrix
+    # decision_function_values = model.decision_function(X)
+    # n_samples = X.shape[0]
+    # se = np.sqrt(
+    #         np.diag(np.linalg.inv(np.dot(X.T * (1- sigmoid(decision_function_values)), X) / n_samples))
+            # )
     # Calculate midpoint and slope
     midpoint = -model.intercept_[0] / coefficients[0]
     slope = -coefficients[0] / coefficients[1]
 
-    return q, midpoint, slope
+    return q, midpoint, slope#, se
 
 

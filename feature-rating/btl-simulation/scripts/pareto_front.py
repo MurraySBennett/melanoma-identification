@@ -20,7 +20,7 @@ def plot3d(x, y, z, pareto=None):
     fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111,projection='3d')
 
-    ax.set_title("BTL Simulations")
+    # ax.set_title("BTL Simulations")
     ax.set_xlabel("$\it{n}$ Images")
     ax.set_ylabel("$\it{n}$ Trials")
     ax.set_zlabel("P(connected)")

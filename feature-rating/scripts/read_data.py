@@ -7,10 +7,17 @@ import numpy as np
 import scipy.stats
 import matplotlib.pyplot as plt
 import json
+from pprint import pprint as pp
 # from scipy.stats import pearsonr, spearmanr
 
 from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
 from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr, shape_dist
+
+global participant_conditions, pilot_data, sona_ids
+participant_conditions = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
+pilot_data = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
+sona_ids = dict(id=[], n_trials=[])
+subject = 1
 
 def get_vars():
     global_vars = {}
@@ -34,8 +41,17 @@ def get_id(value, file):
         print(f'{file} has ID issues')
         return 'No_ID'
 
+def get_platform(value, file):
+    try:
+        data = json.loads(value)
+        platform = data.get("platform")
+        return platform
+    except (json.JSONDecodeError, AttributeError):
+        print(f'{file} has no platform information')
+        return None
 
 def process_data(file):
+    global subject
     """ read and organise data """
     data_columns = [
     'sender', 'timestamp', 'pID', 
@@ -57,14 +73,19 @@ def process_data(file):
     # id_search = re.compile(r'\d+')
     # pID = id_search.search(df['url'][0]).group()
     pID = get_id(df['url'][0], file)
-
+    platform = get_platform(df['url'][0], file)
+    if platform is not None and platform == 'sona':
+        sona_ids['id'].extend([pID])
+    
     condition = df['condition'][1]
-
+    
     
     try:
         df = df.loc[(df['sender']=='trial') & (df['practice']==False)]
     except Exception as e:
         print(f'{file} has issues filtering out extranous senders: {e}')
+        if platform == 'sona':
+            sona_ids['n_trials'].extend([None])
         return None
     try: 
 
@@ -89,9 +110,20 @@ def process_data(file):
 
         df.dropna()
         df = df[data_columns].reset_index(drop=True)
+        participant_conditions[condition] += 1
+        if platform == 'sona':
+            sona_ids['n_trials'].extend([len(df)])
+        if "btl" in file:
+            pilot_data[condition] += 1
+
+        df['subject'] = subject
+        subject += 1
         return df
+
     except Exception as e:    
         print(f'{file} has some issue that you need to come back into the code to inspect')
+        if platform == 'sona':
+            sona_ids['n_trials'].extend([None])
         return None
 
 
@@ -100,7 +132,14 @@ def read_all(files):
     dfs = list(map(process_data, files))
     df = pd.concat(dfs, ignore_index=True)
     grouped_df = df.groupby('pID')
-    df['pnum'] = grouped_df.ngroup()
+    # df['pnum'] = grouped_df.ngroup()
+
+    print(f'All Data:\n',participant_conditions)
+    print(f'Offline Pilot Data:\n', pilot_data)
+
+    pp('SONA IDs:')
+    pp(pd.DataFrame(sona_ids).sort_values(by='id'))
+
     return df
 
 
@@ -130,7 +169,7 @@ def return_trials_remaining(data):
 
 
 def main():
-    save_data = False
+    save_data = True
     n_files = None
     home_path = path.join(path.expanduser('~'), 'win_home', 'melanoma-identification')
     paths = dict(
@@ -148,13 +187,13 @@ def main():
 
     # image_ids  = sorted(list(set(data.winner) | set(data.loser)))
 
-    summary = data.groupby(['condition', 'pnum']).agg({
+    summary = data.groupby(['condition', 'subject']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
         'duration': [meanRT, semRT, stdRT, exp_dur]
         }).reset_index()
     summary.columns = [col[1] if col[1] else col[0] for col in summary.columns]
 
-    pos_rt = data.groupby(['condition', 'pnum', 'response']).agg({
+    pos_rt = data.groupby(['condition', 'subject', 'response']).agg({
         'duration': np.mean}).reset_index()
 
     regular = summary[summary['condition']=='regular']
