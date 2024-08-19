@@ -1,0 +1,16 @@
+sender,sender_type,sender_id,timestamp,meta,,blockNo,condition,duration,ended_on,img_left,img_reveal,img_right,practice,response,response_action,selection_duration,time_commit,time_end,time_render,time_run,time_show,time_switch,total_blocks,total_trials,trialNo,url
+informed_consent,html.Screen,0,2023-05-03T17:38:17.552Z,"{""labjs_version"":""20.2.4"",""labjs_build"":{""flavor"":""production"",""commit"":""f5b4a49f956347addd546a832a3327688c2c0fef""},""location"":""https://run.pavlovia.org/MurrayBennett/melanoma-2afc/?participant=65223"",""userAgent"":""Mozilla/5.0 (iPhone; CPU iPhone OS 16_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Mobile/15E148 Safari/604.1"",""platform"":""iPhone"",""language"":""en-US"",""locale"":""en-US"",""timeZone"":""America/Chicago"",""timezoneOffset"":300,""screen_width"":393,""screen_height"":852,""scroll_width"":377,""scroll_height"":90,""window_innerWidth"":393,""window_innerHeight"":660,""devicePixelRatio"":3}",,,,2125,response,,,,,consent,click button,,2870,2857,710,705,732,2884,,,,"{""participant"":""65223""}"
+Welcome,html.Screen,1,2023-05-03T17:38:18.589Z,,,,irregular,1022,response,,,,,continue,click button,,3907,3906,2878,2870,2884,3929,,,,
+trial,html.Screen,2_0_0,2023-05-03T17:38:30.102Z,,0,0,,11514,timeout,ISIC_0061792.JPG,,ISIC_4679428.JPG,true,,,500,15420,15419,3910,3907,3929,15443,1,6,1,
+sequence,flow.Sequence,2_0,2023-05-03T17:38:30.103Z,,0,,,11490,completion,,,,true,,,,15420,15419,3910,3907,3929,15443,1,6,,
+trial,html.Screen,2_1_0,2023-05-03T17:38:41.622Z,,0,0,,11518,timeout,ISIC_0776486.JPG,,ISIC_5199497.JPG,true,,,500,26939,26938,15432,15421.000000000002,15443,26961,1,6,2,
+sequence,flow.Sequence,2_1,2023-05-03T17:38:41.622Z,,0,,,11495,completion,,,,true,,,,26940,26938,15432,15421.000000000002,15443,26961,1,6,,
+trial,html.Screen,2_2_0,2023-05-03T17:38:53.137Z,,0,0,,11526,timeout,ISIC_2556187.JPG,,ISIC_8575776.JPG,true,,,500,38454,38453,26948,26940,26961,38487,1,6,3,
+sequence,flow.Sequence,2_2,2023-05-03T17:38:53.137Z,,0,,,11492,completion,,,,true,,,,38455,38453,26948,26940,26961,38487,1,6,,
+trial,html.Screen,2_3_0,2023-05-03T17:39:04.654Z,,0,0,,11517,timeout,ISIC_8141769.JPG,,ISIC_9238366.JPG,true,,,500,49971,49970,38470,38455,38487,50004,1,6,4,
+sequence,flow.Sequence,2_3,2023-05-03T17:39:04.654Z,,0,,,11483,completion,,,,true,,,,49971,49970,38470,38455,38487,50004,1,6,,
+trial,html.Screen,2_4_0,2023-05-03T17:39:16.176Z,,0,0,,11513,timeout,ISIC_8949026.JPG,,ISIC_9959593.JPG,true,,,500,61492.00000000001,61492.00000000001,49987,49972,50004,61517,1,6,5,
+sequence,flow.Sequence,2_4,2023-05-03T17:39:16.176Z,,0,,,11488.000000000007,completion,,,,true,,,,61493,61492.00000000001,49987,49972,50004,61517,1,6,,
+trial,html.Screen,2_5_0,2023-05-03T17:39:27.686Z,,0,0,,11531,timeout,ISIC_0010479.JPG,,ISIC_0460240.JPG,true,,,500,73003,73002,61509,61493,61517,73048,1,6,6,
+sequence,flow.Sequence,2_5,2023-05-03T17:39:27.687Z,,0,,,11485,completion,,,,true,,,,73003,73002,61509,61493,61517,73048,1,6,,
+loop,flow.Loop,2,2023-05-03T17:39:27.687Z,,,,,69073,completion,,,,true,,,,73003,73002,3910,3907,3929,73048,1,6,,

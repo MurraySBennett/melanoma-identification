@@ -1,0 +1,27 @@
+Total number of images from 2016, 2017, 2018, 2019, and 2020 is: 93, 083.
+The "problem" the authors are trying to avoid is that there are duplicates across the years. This occurs when they download each year separately. You don't have quite the same issue because you downloaded the entire database at once. You mad dog. Woof woof.
+
+The 2016 data set contains 1279 images but only contains ground truth information for malignant vs benign. This is problematic because it does not necessarily indicate if the malignancy is melanoma. The authors removed this entire year. You might do something similar.
+
+2017 contains 2600 images with ground truth melanoma classification for all. This dataset also has a ground truth lesion segmentation mask associated with each image.
+
+The 2018 dataseet is comprised of 10, 015 training and 1512 test images but ground truth is only available for the training set. This may be a function of the 'competition' and may not be the case if you have downloaded all data at once. That is, the test metadata may have been intentionally removed.
+
+Similarly, only the training images of the 2019 set hold ground truth data, a total of 25, 331 images. This is again the case in 2020, with the training set of 33, 126 images.
+
+The total count of images with groundtruth data (including the general ground truth information of 2016) is then 72, 351. The total count of images you have downloaded is: 71, 670.
+The authors are using this data for the competition, so they retain some boundaries between training and test data. Therefore, the total number of training images they have for each year are:
+2017 - 2000
+2018 - 10, 015
+2019 - 25, 331
+2020 - 33, 126
+TOTAL - 70, 472,
+
+and the total number of test images with ground truths are:
+2017 - 600
+2018 - 0
+2019 - 0
+2020 - 0
+
+----------
+I want ground truth information for melanoma for all images I use. This removes the 2016 images, unless they have since had this information included. You need to check your own files here.

@@ -1,0 +1,382 @@
+\documentclass[man, 12pt, a4paper,  donotrepeattitle, floatsintext, draftfirst]{apa7}
+
+% Packages
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[style=apa, backend=biber]{biblatex}
+\addbibresource{melrefs.bib}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{geometry}
+\setlength{\parindent}{0.5in}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[toc,page]{appendix}
+\usepackage{arydshln}
+
+% Preamble
+\title{Perceptual interaction of shape and colour on skin lesion judgements}
+\shorttitle{Multi-Feature Skin Lesion Perception}
+\authorsnames[1,1,2,3,4]{
+    Murray S. Bennett,
+    Joseph W. Houpt,
+    James T. Townsend,
+    Michael J. Wenger,
+    Lawrence Mark
+}
+\authorsaffiliations{
+    The University of Texas at San Antonio,
+    {Indiana University, Bloomington},
+    The University of Oklahoma,
+    Indiana University Health
+}
+
+\date{~}
+\doublespacing
+
+\newenvironment{significance}{
+    \par\textbf{Significance Statement:}
+    \par
+}{\par}
+
+\newenvironment{correspondence}{
+    \par\textbf{Author correspondence:}
+}{\par}
+
+\begin{document}
+\maketitle
+\begin{significance}
+
+\end{significance}
+
+\begin{correspondence}
+    Direct any correspondence to \href{murray.bennett92@gmail.com}{murray.bennett92@gmail.com}
+\end{correspondence}
+
+\newpage
+\pagenumbering{roman}
+%\tableofcontents
+
+\begin{abstract}
+% what was the question?
+% what did we do
+% what did we find
+% what are the implications
+
+%~How do naive human observers integrate the important perceptual information of skin lesions used in melanoma identification?
+
+%We used a General Recognition Theory approach (GRT) to examine how participants integrate the shape and colour information of skin lesions. We ran three conditions (20 participants each) where each condition prompted participants to determine if a target image was higher or lower along two perceptual dimensions as compared to a control image. Each condition represented an iteration of the set combinations of shape symmetry, border regularity, and colour variance. We then trained a DCNN on the image-set, isomapped the penultimate activation layer and explored the perceptual representations of the algorithm and compared it the human perceptual representational space derived via the GRT model.
+
+%Across all feature combinations, participants neither separated perceptual information when making judgements of skin lesions nor perceived the two feature dimensions independently. 
+
+%Novice observers could not separate and independently perceive the important perceptual features used in melanoma identification. Instead, they assessed lesions along a single `ugliness' dimension. Public awareness campaigns to check these essential features may be ineffective if people cannot effectively perceptually separate these features for independent evaluation. Additionally, this methodology can (i)  examine the progression of expertise, (ii) examine the fuzzy representations of melanoma held by expert practitioners, and (iii) generate individualised training routines that rapidly direct learners toward a more sensitive representation of melanoma-like lesions.
+
+\end{abstract}
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+The rates of malignant melanoma, the deadliest form of skin cancer, are increasing around the world.
+Reducing the impact of this deadly cancer demands early detection, and early detection depends on accurate perceptual judgements of the many physiological features that can signal the development of melanoma.
+These perceptual judgements are typically made by novice observers: the lay person conducting a self-skin examination.
+To aid novices in making effective perceptual judgements, public health campaigns typically use rules-based heuristics.
+A popular method being the ABCDE rule, where observers are instructed to judge the (A) shape asymmetry, (B) border irregularity, (C) colour variance, (D) diameter, and (E) evolution of the lesion over time.
+If a lesion violates one or a combination of these rules, the observer should seek expert medical attention.
+While these guides are informative, using such rules in practice can be difficult for two primary and compounding reasons:
+(i) the subjective nature of judging when a particular feature is sufficiently abnormal, and
+(ii) the large natural variability in skin lesions.
+For example, pick out one (or all!) of your or your neighbours freckles and endeavour to apply the above rules.
+For those with neither skin lesions nor willing neighbours, consider instead the lesions below in Figure~\ref{fig:feature_variance}.
+
+\begin{figure}[htb]
+    \caption[ABC feature variance]{Variation in skin lesion features of shape asymmetry, border irregularity, and colour variance}
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio, trim={1cm, 0.5cm, 0.5cm, 1.5cm}, clip]{./feature_variance.pdf}
+    \label{fig:feature_variance}
+\end{figure}
+
+One particular challenge associated with using the ABCDE rule is that it requires a perceptual judgment of each feature separately.
+But examinations of human perception of singular skin lesion features indicate high variability within and between observers \parencite{gunasti2008interrater,branstrom2002laypersons}.
+Part of this perceptual difficulty may be attributed to the fact that many cognitive processes, particularly perceptual judgements, are fundamentally multidimensional.
+For example, the lesions along the top row of Figure~\ref{fig:feature_variance} display an increasing degree of asymmetry, but you will notice that these lesions also covary with the perceptual dimensions of border regularity and colour variance.
+Therefore, if judgements of one dimension, say shape symmetry, are to be conducted independently, they must account for changes across other perceptual dimensions, but it is not known if and how observers combine such perceptual information when judging skin lesions.
+While a corpus of basic science exists examining relationships between varies shape properties and colour, no studies have yet examined these relationships in the highly variable, real-world stimuli of skin lesions.
+Therefore, the primary aim of the current paper is to identify and examine whether the perceptual dimensions of shape symmetry, border regularity, and colour variance are perceptually separable and independent of each other in judgments of skin lesions.
+To this end, we use General Recognition Theory \parencite[GRT; ][]{ashby1986varieties}, which provides a powerful framework for studying the relationships between perceptual dimensions.
+
+% Sensitive perceptual judgements of these skin lesion features are critical for the early detection of melanoma, but developing sensitive perceptual training paradigms to improve this ability requires a full understanding of how we process the perceptual information of skin lesions.
+% which must account for the relationships and interactions \textit{between} these dimensions.
+
+
+\subsection{General Recognition Theory}
+GRT is often considered a multidimensional extension of signal detection theory, as it models trial-by-trial variation in responses by assuming a two-stage process of noisy perceptual encoding followed by deterministic response selection \parencite{ashby2015multidimensional}.
+A fundamental assumption of GRT is that all perceptual systems are inherently noisy, with noise present both in the stimulus and in the observer's sensory representation of the stimulus.
+Despite this noise, the perceived value of a stimulus in each sensory dimension tends to increase as the level of the relevant stimulus dimension increases.
+To demonstrate this idea with a concrete example, consider the left-most skin lesion on the top row of Figure~\ref{fig:feature_variance}.
+GRT assumes that perception of this skin lesion's shape symmetry will vary each time we perceive it, but we will generally  perceive it as being more symmetrical than the lesions to it's right.
+To examine the relationships between multiple perceptual dimensions, GRT is typically used in 2x2 task designs that vary the stimuli vary along two dimensions of interest.
+For example, one condition of the experiment reported in this paper asks participants to categorise skin lesions that vary both shape symmetry (dimension 1) and border regularity (dimension 2) across low and high levels.
+
+From a modeling perspective, the assumption of noisy perception infers that, from trial to trial, the perception of a single stimulus at each level always varies, producing a probability distribution for the perception of a stimulus.
+Given a 2x2 design where two dimensions are each represented across two levels, there are 4 groups of stimuli, each with their own estimated perceptual distribution.
+The goal of GRT is to model these distributions using the confusion matrices derived from a categorisation task.
+The statistical properties of these distributions generate predictions about the observed data, which allows inferences from empirical data about two latent perceptual structures:
+(i) the perceptual independence and
+(ii) perceptual separability of the two perceptual dimensions
+\footnote{A third property, decisional separability, may also be assessed but, following \parencite{silbert2016tutorial}, we assume that decisional separability holds for our modelling exercise and omit it from the current study.}.
+
+\subsubsection{Perceptual Independence}
+Consider two perceptual dimensions:
+shape symmetry and
+border regularity.
+Symmetry and border regularity demonstrate perceptual independence (PI) if and only if the perceptual value of shape symmetry is statistically independent of the perceptual value of border regularity.
+If statistical independence is violated, we can conclude that shape symmetry and border regularity are dependently perceived.
+Note that this condition is evaluated at each level combination of symmetry and border regularity, meaning this assumption can fail or hold at each of the four levels in a 2x2 design.
+
+% which we generalise to dimensions A and B, which vary across two levels, low and high. We use $i$ to denote the level of dimension A and $j$ the level of dimension B, where $i = 1,2$ and $j = 1,2$. Dimensions A and B are perceived independently in a stimulus $A_iB_j$ if and only if the perceptual value of A is statistically independent of the perceptual value of B on $A_iB_j$ trials. That is, shape symmetry and border regularity are independently perceived in skin lesions with high symmetry and high border regularity ($A_2B_2$) if the perception of high shape symmetry is statistically independent of the perception of border regularity. If statistical independence is violated, we can conclude that shape symmetry and border regularity are dependently perceived in lesions with highly symmetrical shapes and highly regular borders. It is important to note that perceptual independence is a property of a single stimulus, so independence may hold at one level but fail in all others. \parencite{ashby2015multidimensional}.
+
+\subsubsection{Perceptual Separability}
+The perceptual separability (PS) between dimensions holds if perception of one dimension does not vary when the level of the other dimension changes.
+Concretely, shape symmetry is said to be perceptually separable from border regularity if shape symmetry is perceived to be the same across lesions with the same level of shape symmetry but differing levels of border regularity.
+In contrast to perceptual independence, perceptual separability is evaluated at each dimension and does not need be bidirectional.
+That is, shape symmetry may be perceptually separable from border regularity, but this does not necessitate perceptual separability in the reverse case.
+
+\section{MSB MARKER}
+
+% In summary, GRT provides a robust framework for understanding the multidimensional nature of perception and cognitive processing, taking into account the inherent noise in perceptual systems and the deterministic nature of response selection. It has been used to model perceptual interactions in vision and audition, as well as higher-level processes in memory. Despite its technical nature, GRT offers powerful tools for researchers interested in probing the relationships between dimensions in a particular domain. It allows for the drawing of inferences about latent perceptual structures and the presence or absence of perceptual dimensional interactions from observed data. It is a valuable tool in the field of cognitive science and perception research.
+
+% Dimension A is determined as perceptually separable from dimension B if the participant's perception of A does not change when the level of B varies. For example, a participant's perception of low shape symmetry ($A_1$) is perceptually separable from border regularity if their perception of low shape symmetry is the same regardless of border regularity being low or high. Separability is observable when the joint distributions are aligned.  This is observable at each component level and there is no requirement of bidirectionality: A can be separable from B while B is integral with A \parencite{ashby2015multidimensional}.
+
+% Response selection in GRT is deterministic. When a random perceptual effect occurs in a particular response region, the response associated with that region is always selected. Response probabilities are given by the joint properties of the noisy perceptual distributions and deterministic decision bounds.
+
+
+\subsection{The Current Research}
+% ??hypotheses on??:
+% \begin{itemize}
+%     \item symmetry and border regularity integration/interaction:
+%     \item symmetry and colour variance
+%     \item border regularity and colour variance
+%     \item Alternatively - anything regarding shape vs colour.
+% \end{itemize}
+
+
+\section{Methods}
+\subsection{Participants}
+Seventy-one undergraduate students from the University of Texas at San Antonio (UTSA) completed the experiment.
+Following data cleaning (see Analysis section) data from 59 participants were included in the final analysis.
+All participants reported normal or corrected-to-normal vision.
+The IRB of UTSA approved this research (FY-22-23-83).
+
+\subsection{Design}
+The experiment involved three conditions, each containing the pairwise combinations of shape symmetry (A), border regularity (B), and colour uniformity (C):
+AB, AC, or BC.
+Participants were randomly assigned to the three conditions:
+20 under the AB and AC conditions and
+19 under the AC condition.
+Each condition used a 2x2 design consisting of two levels of perceptual strength of the feature (low and high) for the two features (AB, AC, or BC, depending on the condition), resulting in four perceptual categories:
+low-low, low-high, high-low, and high-high.
+Participants viewed two images per trial:
+(i) a control image that served as a perceptual reference and
+(ii) a target image representing the feature combination to be identified.
+This design requires four response types where the target image, with respect to the reference image, is judged to be:
+(1; \textit{F}) lower in both dimensions,
+(2; \textit{E}) lower in dimension 1 and higher in dimension 2,
+(3; \textit{J}) higher in dimension 1 and lower in dimension 2, or
+(4; \textit{I}) higher in both dimensions.
+
+\subsection{Stimuli}
+The images used in this experiment were drawn from a pool of $10, 000$ images ($512\times384$ px) originally obtained from the International Skin Imaging Collaborative archive \parencite{ISICref}.
+We derived a perceptual strength score for each feature for all images in a previous study \parencite[see][]{bennett2024features}.
+We used a range of these feature strength scores to draw target images representing low- and high-feature levels and reference images, which reflected feature strength scores midway between the low and high levels.
+A minimum of $xxx$ control and $xxx$ target images were used for each level in the experiment.
+A 2-down, 1-up staircase procedure determined each participant's perceptual strength levels. 
+
+% \subsubsection{Staircase Procedure}
+
+% \begin{figure}[htb]
+%     \caption{Example comparison trial}
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{./images/grt_trial.pdf}
+%     \label{fig:trial_demo}
+% \end{figure} 
+
+\subsection{Procedure}
+Following informed consent, participants were instructed to evaluate the image on the right side image in reference to the image on the left side according to the two perceptual features determined by the condition (e.g., shape symmetry and border regularity) and to provide one of the four responses corresponding to the feature-level combinations.
+All trials began with a 1000ms blank screen, during which images were loaded, followed by a 500ms cue (`+'), after which the two images were revealed to participants.
+The set of response keys and their associated perceptual category were presented to participants in the footer of the screen throughout the experiment. 
+
+Participants began by completing 16 demonstration trials, in which 4 exemplars were sequentially displayed for each category with the correct response provided.
+There was no response time limit for the demonstration trials and participants were encouraged to use those trials to familiarise themselves with the keyboard responses.
+All subsequent trials had a 15-second response time limit. 
+
+Participants then completed two practice blocks of 40 randomised trials (10 trials per category).
+The correct response was provided to the participants in the first practice block, and the difficulty of the stimulus level was the lowest (i.e., the difference in the feature scores of the images between the low- and high-levels was the maximum difference).
+The second practice block was presented to participants as additional practice, but included a staircase procedure that incrementally altered the difference in stimulus level scores.
+That is, the feature-strength score difference between low and high levels of a feature were reduced (made more difficult) following two correct responses to that feature level, or increased the difference (made easier) following an incorrect response to that feature level.
+The mean feature level scores of the final 20 trials determined the feature levels for the main phase of the experiment.
+
+Participants then completed five blocks of 120 randomised trials (30 trials per category), for 600 trials (150 trials per category).
+Each block was separated by a minimum 20-second break.
+The total completion time for the experiment ranged from $40-60$ minutes.
+
+\subsection{Analysis}
+Trials with response times less than $1000$ms or greater than $15,000$ms were removed and participants with a hit rate below $30\%$ were excluded from the analysis.
+Confusion matrices for the three conditions were derived separately for each participant.
+Model-based analysis for perceptual separability and perceptual independence was performed for each individual and hierarchically for each condition using the \textit{grtools} R package \parencite{soto2017testing}.
+\textit{grtools} fits the full hierarchy of model assumptions via maximum likelihood estimation and returns the best fitting model following comparison of the AIC for each model.
+Model outputs and summary statistics for the individual level analysis are included in the Supplementary.
+
+\section{Results}
+Hierarchical model fits for each condition are shown in Figure~\ref{fig:grt_group}.
+We describe the hierarchical fits and general group trends here and include individual model analysis in Supplementary Material \ref{appendix:ind_fits}
+
+\begin{figure}[htb]
+    \centering
+    \caption{GRT Hierarchical Models}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{ab_wind.pdf}
+        \caption{Symmetry\\Border regularity}
+        \label{fig:grt_ab}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{ac_wind.pdf}
+        \caption{Symmetry\\Colour uniformity}
+        \label{fig:grt_ac}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{bc_wind.pdf}
+        \caption{Border regularity\\Colour uniformity}
+        \label{fig:grt_bc}
+    \end{subfigure}
+    \label{fig:grt_group}
+\end{figure}
+
+
+% summary table of PS/PI violations and such. I don't know.
+
+% summary of best models and the like. I don't know.
+
+% estimates to show diagnostic performance if you include EffNet activations -- the ROC-AUC with the computer vision and human perception (that's not the point, though, so maybe not).
+
+% if you're including EffNet activations -- visualisation of feature dimensions (images scattered).
+
+% honestly, I don't see how your work with the EffNets is relevant here. The DCNNs detect/learn different dimensions, just as people don't use the dimensions we're prompted to remember.
+
+\section{Discussion}
+Previous research on the perceptual integration of shape and colour (using simple and tightly controlled stimuli) shows:
+\begin{itemize}
+    \item \cite{gheorghiu2016role}: colour can help identify symmetry (used red/green/blue/yellow? dot clouds).
+    \item \cite{fitousi2018feature}: colour and shape were perceptually separable, but not perceptually independent (used red/green x's/o's). \cite{cohen1997visual} has a similar conclusion, but uses black/white squres/circles for extremely short presentation times.
+    \item \cite{soto2017testing}, in recommendation 6 or 7, mentions that colour and shape are separable dimensions, but I can't really find a body of papers that indicate this. They would also be papers using very simple stimuli -- such as those mentoied above
+\end{itemize}
+
+\newpage
+\printbibliography
+
+\newpage
+\appendix
+\section{Individual GRT Modeling}
+\label{appendix:ind_fits}
+Include your model outputs here.
+\subsection{Symmetry and Border Regularity}
+
+\begin{table}[htb]
+\centering
+\caption{Symmetry and border regularity model likelihood ratio test summaries for the subset of participants where perceptual property assumptions held(\checkmark).}
+\begin{tabular}{rccc}
+id &  PS: Symmetry  & PS: Border Regularity & PI \\ \hline
+6  &       -        & \checkmark            & \checkmark \\ \hdashline
+5  &       -        & -                     & \checkmark \\
+8  &       -        & -                     & \checkmark \\
+18 &       -        & -                     & \checkmark \\ \hdashline
+10 &       -        & \checkmark            & -\\
+12 &       -        & \checkmark            & -\\
+17 &       -        & \checkmark            & -\\
+% 1  &  -& - & - \\
+% 2  &  -& - & - \\
+% 3  &  -& - & - \\
+% 4  &  -& - & - \\
+% 7  &  -& - & - \\
+% 9  &  -& - & - \\
+% 11 &  -& - & - \\
+% 13 &  -& - & - \\
+% 14 &  -& - & - \\
+% 15 &  -& - & - \\
+% 16 &  -& - & - \\
+% 19 &  -& - & - \\
+% 20 &  -& - & -
+\end{tabular}
+\label{tab:ind_ab}
+\end{table}
+
+\subsection{Symmetry and Colour}
+\begin{table}[htb]
+\centering
+\caption{Symmetry and colour uniformity model likelihood ratio test summaries for the subset of participants where perceptual property assumptions held(\checkmark).}
+\begin{tabular}{rccc}
+id &  PS: Symmetry  & PS: Colour & PI \\ \hline
+8  &  \checkmark    & - & \checkmark \\ \hdashline
+10 &       -        & - & \checkmark \\ \hdashline
+1  &  \checkmark    & -          & - \\ \hdashline
+2  &       -        & \checkmark & - \\
+6  &       -        & \checkmark & - \\
+13 &       -        & \checkmark & - \\
+17 &       -        & \checkmark & - \\
+% 3  &  -& - & - \\
+% 4  &  -& - & - \\
+% 5  &  -& - & - \\
+% 7  &  -& - & - \\
+% 9  &  -& - & - \\
+% 11 &  -& - & - \\
+% 12 &  -& - & - \\
+% 14 &  -& - & - \\
+% 15 &  -& - & - \\
+% 16 &  -& - & - \\
+% 18 &  -& - & - \\
+% 19 &  -& - & -
+\end{tabular}
+\label{tab:ind_ac}
+\end{table}
+
+
+\subsection{Border Regularity and Colour}
+\begin{table}[htb]
+\centering
+\caption{Border regularity and colour uniformity model likelihood ratio test summaries for the subset of participants where perceptual property assumptions held (\checkmark).}
+\begin{tabular}{rccc}
+id  & PS: Border Regularity & PS: Colour & PI \\ \hline
+13  &  \checkmark           & \checkmark & \checkmark \\ \hdashline
+14  &      -                & \checkmark & \checkmark \\ \hdashline
+2   &      -                & -          & \checkmark \\
+19  &      -                & -          & \checkmark \\ \hdashline
+9   &  \checkmark           & -          & - \\          \hdashline
+1   &      -                & \checkmark & -\\
+3   &      -                & \checkmark & -\\
+4   &      -                & \checkmark & -\\
+5   &      -                & \checkmark & -\\
+6   &      -                & \checkmark & -\\
+10  &      -                & \checkmark & -\\
+11  &      -                & \checkmark & -\\
+15  &      -                & \checkmark & -\\
+17  &      -                & \checkmark & -\\
+% 7   & -& - & - \\
+% 8   & -& - & - \\
+% 12  & -& - & - \\
+% 16  & -& - & - \\
+% 18  & -& - & - \\
+% 20  & -& - & -
+\end{tabular}
+\label{tab:ind_bc}
+\end{table}
+
+
+
+
+\end{document}

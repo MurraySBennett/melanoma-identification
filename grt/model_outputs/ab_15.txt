@@ -1,0 +1,25 @@
+The optimization algorithm may have failed
+The following message was produced by the optim() function:
+	 ERROR: ABNORMAL_TERMINATION_IN_LNSRCH 
+
+Summary of measures of fit for all models:
+(Models are ranked according to AIC)
+
+              Model   Log-likelihood          AIC AIC weight
+        {1_RHO, DS}        -677.4905     1402.981      0.999
+ {1_RHO, PS(B), DS}        -694.0122     1416.024      0.001
+ {1_RHO, PS(A), DS}        -701.8297     1431.659       0.00
+        {PS(B), DS}        -692.1298     1448.260       0.00
+    {1_RHO, PS, DS}        -717.1749     1450.350       0.00
+           {PI, DS}        -712.4296     1461.431       0.00
+        {PS(A), DS}        -700.3800     1464.760       0.00
+           {PS, DS}        -716.6220     1469.815       0.00
+               {DS}        -675.3829     1478.766       0.00
+    {PI, PS(B), DS}        -729.2168     1479.767       0.00
+    {PI, PS(A), DS}        -737.4272     1496.188       0.00
+       {PI, PS, DS}        -754.2144     1520.065       0.00
+
+Best fitting model: {1_RHO, DS} 
+Perceptual Separability of A?: no 
+Perceptual Separability of B?: no 
+Perceptual Independence?: no 

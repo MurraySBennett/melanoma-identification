@@ -1,0 +1,5 @@
+The optimization algorithm was successful
+
+Measures of Fit: 
+	Log-likelihood: -12479.94 
+	R-squared: 0.9711 

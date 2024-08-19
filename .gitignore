@@ -3,25 +3,18 @@
 .JPG
 *.JPG
 *.exe
-writing/General Recognition Theory for Enhanced Melanoma Identification.docx
 *.zip
 *.png
 .Rproj.user
 *.pyc
 *.pickle
 *.xlsx
-.venv
-venv
-.samvenv
 *.log
 *.pth
 *.pb
 *.Rhistory
-*.csv
-*shape.txt
 *.mp4
-computer-vision/ISIC-melanoma-segmentation/
-feature-rating/experiment/melanoma-2afc/
+
 # latex files
 *.blg
 *.fls

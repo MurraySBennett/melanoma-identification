@@ -1,0 +1,23 @@
+The optimization algorithm was successful
+
+Summary of measures of fit for all models:
+(Models are ranked according to AIC)
+
+              Model   Log-likelihood          AIC AIC weight
+        {1_RHO, DS}        -605.2484     1258.497      0.994
+ {1_RHO, PS(B), DS}        -620.3007     1268.601      0.006
+        {PS(B), DS}        -618.7201     1301.440       0.00
+               {DS}        -603.9882     1335.976       0.00
+           {PI, DS}        -657.9567     1352.485       0.00
+    {PI, PS(B), DS}        -672.6996     1366.733       0.00
+ {1_RHO, PS(A), DS}        -671.2816     1370.563       0.00
+    {1_RHO, PS, DS}        -683.9635     1383.927       0.00
+           {PS, DS}        -676.2834     1389.138       0.00
+        {PS(A), DS}        -669.1936     1402.387       0.00
+    {PI, PS(A), DS}        -723.0361     1467.406       0.00
+       {PI, PS, DS}        -737.8166     1487.269       0.00
+
+Best fitting model: {1_RHO, DS} 
+Perceptual Separability of A?: no 
+Perceptual Separability of B?: no 
+Perceptual Independence?: no 

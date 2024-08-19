@@ -1,0 +1,13 @@
+The optimization algorithm was successful
+
+Measures of Fit: 
+	Log-likelihood: -12904.13 
+	R-squared: 0.9707 
+
+Results of the Likelihood Ratio tests:
+                                   Test  Chi2 DF  pval Violation
+ Perceptual Separability of dimension A  29.4  4 0.000       YES
+ Perceptual Separability of dimension B  18.6  4 0.001       YES
+                Perceptual Independence   8.7  4 0.069        NO
+ Decisional Separability of dimension A 510.7 20 0.000       YES
+ Decisional Separability of dimension B 121.7 20 0.000       YES

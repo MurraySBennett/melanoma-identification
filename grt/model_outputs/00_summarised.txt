@@ -1,0 +1,549 @@
+ab_1
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -530.4343     1108.869      0.912
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_10
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -733.2641     1494.528      0.977
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ab_11
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -534.6972     1117.394       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_12
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -724.6981     1477.396       1.00
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ab_13
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -386.1593     820.3186       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_14
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -616.6742     1281.348      0.975
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_15
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -677.4905     1402.981      0.999
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_16
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -659.3909     1366.782      0.934
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_17
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -749.4364     1526.873      0.931
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ab_18
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -724.0294     1484.630      0.982
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ab_19
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -430.8833     909.7666      0.573
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_2
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -551.8157     1151.631       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_20
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -510.2423     1068.485       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_3
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -702.0547     1452.109      0.817
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_4
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -525.0905     1098.181       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_5
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -631.2916     1299.155      0.996
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ab_6
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, PS(B), DS}        -679.1920     1379.717      0.879
+Best fitting model: {PI, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: yes
+
+ab_7
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -660.4109     1368.822      0.987
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_8
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -684.3522     1405.276      0.916
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ab_9
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -698.5797     1445.159      0.653
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_JWH
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -595.4801     1238.960       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ab_MSB
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -617.3051     1271.182      0.992
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ac_1
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(A), DS}        -676.6842     1381.368      0.624
+Best fitting model: {1_RHO, PS(A), DS}
+Perceptual Separability of A?: yes
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_10
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -699.1640     1434.899      0.727
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ac_11
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -533.0981     1114.196       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_12
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -554.4098     1156.820       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_13
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -690.6311     1409.262      0.992
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ac_14
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -585.9620     1219.924       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_15
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -602.8811     1253.762       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_16
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -628.6200     1305.240      0.987
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_17
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -596.2485     1220.497      0.999
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ac_18
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -535.4115     1118.823       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_19
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -545.5329     1139.066       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_2
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -586.0894     1200.179      0.998
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ac_3
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -553.1097     1154.219      0.996
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_4
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -633.8621     1315.724       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_5
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -596.8936     1241.787       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_6
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -603.1900     1234.380      0.972
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+ac_7
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -670.1291     1388.258      0.542
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+ac_8
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, PS(A), DS}        -695.2632     1411.860      0.824
+Best fitting model: {PI, PS(A), DS}
+Perceptual Separability of A?: yes
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+ac_9
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -510.7090     1069.418      0.684
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_1
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -711.6924     1451.385      0.985
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_10
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -707.7228     1443.446      0.578
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_11
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -569.7121     1167.424      0.919
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_12
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -583.3531     1214.706       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_13
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{PI, PS, DS}        -805.8227     1623.282      0.508
+Best fitting model: {PI, PS, DS}
+Perceptual Separability of A?: yes
+Perceptual Separability of B?: yes
+Perceptual Independence?: yes
+
+bc_14
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, PS(B), DS}        -711.8355     1445.004      0.903
+Best fitting model: {PI, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: yes
+
+bc_15
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -613.1023     1254.205      0.711
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_16
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -605.2484     1258.497      0.994
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_17
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -624.0126     1276.025      0.998
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_18
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -637.9847     1323.969       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_19
+The optimization algorithm may have failed
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -540.3780     1117.328      0.989
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+bc_2
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{PI, DS}        -703.3587     1443.289      0.675
+Best fitting model: {PI, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: yes
+
+bc_20
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -536.9184     1121.837       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_3
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -612.9447     1253.889      0.611
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_4
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -681.5040     1391.008      0.609
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_5
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -696.9470     1421.894      0.998
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_6
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(B), DS}        -735.2264     1498.453      0.997
+Best fitting model: {1_RHO, PS(B), DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: yes
+Perceptual Independence?: no
+
+bc_7
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -597.9144     1243.829      0.997
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_8
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, DS}        -593.0163     1234.033       1.00
+Best fitting model: {1_RHO, DS}
+Perceptual Separability of A?: no
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
+bc_9
+The optimization algorithm was successful
+Model   Log-likelihood          AIC AIC weight
+{1_RHO, PS(A), DS}        -640.0540     1308.108      0.677
+Best fitting model: {1_RHO, PS(A), DS}
+Perceptual Separability of A?: yes
+Perceptual Separability of B?: no
+Perceptual Independence?: no
+
