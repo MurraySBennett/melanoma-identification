@@ -1,4 +1,4 @@
-# Perceptual Representations of Melanoma Features in an Identification Task
+# Human Perceptual Representations of Skin Lesion Features
 Examining novice observer's perceptual representation of skin lesion features: shape asymmetry,
 border irregularity, and colour variance. Across two projects, we examine single-feature perception
 and how novice observers combine information across these features.
