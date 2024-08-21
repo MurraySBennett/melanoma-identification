@@ -86,10 +86,10 @@ save_summary <- function(model, condition, pID) {
 # individual fits ----
 {
   rand_pert <- 0.3
-  n_reps <- 19
+  n_reps <- 20
 
   ab_models <- list()
-  counter <- 0
+  counter <- 1
   print("===== Starting AB models =====")
   for (cm in cm_ab) {
     ab_models[[counter]] <- grt_hm_fit(
@@ -98,7 +98,7 @@ save_summary <- function(model, condition, pID) {
       n_reps = n_reps
     )
     print(paste("Finished", counter, "of", length(cm_ab)))
-    counter <- counter + 0
+    counter <- counter + 1
   }
   saveRDS(
     ab_models,
@@ -106,7 +106,7 @@ save_summary <- function(model, condition, pID) {
   )
 
   ac_models <- list()
-  counter <- 0
+  counter <- 1
   print("===== Starting AC models =====")
   for (cm in cm_ac) {
     ac_models[[counter]] <- grt_hm_fit(
@@ -115,7 +115,7 @@ save_summary <- function(model, condition, pID) {
       n_reps = n_reps
     )
     print(paste("Finished", counter, "of", length(cm_ac)))
-    counter <- counter + 0
+    counter <- counter + 1
   }
   saveRDS(
     ac_models,
@@ -123,7 +123,7 @@ save_summary <- function(model, condition, pID) {
   )
 
   bc_models <- list()
-  counter <- 0
+  counter <- 1
   print("===== Starting BC models =====")
   for (cm in cm_bc) {
     bc_models[[counter]] <- grt_hm_fit(
@@ -132,7 +132,7 @@ save_summary <- function(model, condition, pID) {
       n_reps = n_reps
     )
     print(paste("Finished", counter, "of", length(cm_bc)))
-    counter <- counter + 0
+    counter <- counter + 1
   }
   saveRDS(
     bc_models,
@@ -156,7 +156,7 @@ n_reps <- 60 # conservative -- number of times the model is fit to the data.
   print(ab_lr_test$indpar)
   saveRDS(
     fitted_ab_model,
-    here("grt", "model_outputs", "wIND_ab_model.rds")
+    here("grt", "model_outputs", "ab_model_wind.rds")
   )
 
   print(proc.time() - start)
@@ -186,7 +186,7 @@ n_reps <- 60 # conservative -- number of times the model is fit to the data.
   print(ac_lr_test$indpar)
   saveRDS(
     fitted_ac_model,
-    here("grt", "model_outputs", "wIND_ac_model.rds")
+    here("grt", "model_outputs", "ac_model_wind.rds")
   )
   print(proc.time() - start)
 }
@@ -216,7 +216,7 @@ n_reps <- 60 # conservative -- number of times the model is fit to the data.
   print(bc_lr_test$indpar)
   saveRDS(
     fitted_bc_model,
-    here("grt", "model_outputs", "wIND_bc_model.rds")
+    here("grt", "model_outputs", "bc_model_wind.rds")
   )
   print(proc.time() - start)
 }
