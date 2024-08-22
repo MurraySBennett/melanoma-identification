@@ -42,16 +42,16 @@ get_microstats <- function(cm, condition, pID, summarise = TRUE) {
   return(micro_results)
 }
 
-save_summary <- function(model, condition, pID) {
-  txt_out <- capture.output(summary(model))
-  file_path <- here(
-    "grt", "model_outputs", paste0(
-      paste(condition, pID, sep = "_"),
-      ".txt"
-    )
-  )
-  writeLines(txt_out, con = file_path)
-}
+# save_summary <- function(model, condition, pID) {
+#   txt_out <- capture.output(summary(model))
+#   file_path <- here(
+#     "grt", "model_outputs", paste0(
+#       paste(condition, pID, sep = "_"),
+#       ".txt"
+#     )
+#   )
+#   writeLines(txt_out, con = file_path)
+# }
 
 
 {
@@ -141,24 +141,21 @@ save_summary <- function(model, condition, pID) {
 }
 
 # group hierarchical fits
-n_reps <- 60 # conservative -- number of times the model is fit to the data.
+n_reps <- 60
 {
   start <- proc.time()
   fitted_ab_model <- grt_wind_fit_parallel(
     cm_ab,
     n_reps = n_reps
   )
-
-  save_summary(model = fitted_ab_model, condition = "ab", pID = "group")
-
-  ab_lr_test <- lr_test(fitted_ab_model, cm_ab)
-  save_summary(model = ab_lr_test, condition = "ab", pID = "LR_test_results")
-  print(ab_lr_test$indpar)
+  # save_summary(model = fitted_ab_model, condition = "ab", pID = "group")
+  # ab_lr_test <- lr_test(fitted_ab_model, cm_ab)
+  # save_summary(model = ab_lr_test, condition = "ab", pID = "LR_test_results")
+  # print(ab_lr_test$indpar)
   saveRDS(
     fitted_ab_model,
     here("grt", "model_outputs", "ab_model_wind.rds")
   )
-
   print(proc.time() - start)
 }
 
@@ -168,22 +165,10 @@ n_reps <- 60 # conservative -- number of times the model is fit to the data.
     cm_ac,
     n_reps = n_reps
   )
-  # pdf(
-  #   here(
-  #     "figures", "grt_models_group", "ac_wind.pdf"
-  #   ),
-  #   width = 5, height = 6
-  # )
-  # plot(
-  #   fitted_ac_model,
-  #   labels = c("Shape Symmetry", "Colour Uniformity")
-  # )
-  # dev.off()
-  save_summary(model = fitted_ac_model, condition = "ac", pID = "group")
-
-  ac_lr_test <- lr_test(fitted_ac_model, cm_ac)
-  save_summary(model = ac_lr_test, condition = "ac", pID = "LR_test_results")
-  print(ac_lr_test$indpar)
+  # save_summary(model = fitted_ac_model, condition = "ac", pID = "group")
+  # ac_lr_test <- lr_test(fitted_ac_model, cm_ac)
+  # save_summary(model = ac_lr_test, condition = "ac", pID = "LR_test_results")
+  # print(ac_lr_test$indpar)
   saveRDS(
     fitted_ac_model,
     here("grt", "model_outputs", "ac_model_wind.rds")
@@ -198,39 +183,13 @@ n_reps <- 60 # conservative -- number of times the model is fit to the data.
     n_reps = n_reps
   )
   summary(fitted_bc_model)
-  # pdf(
-  #   here(
-  #     "figures", "grt_models_group", "bc_wind.pdf"
-  #   ),
-  #   width = 5, height = 6
-  # )
-  # plot(
-  #   fitted_bc_model,
-  #   labels = c("Border Regularity", "Colour Uniformity")
-  # )
-  # dev.off()
-  save_summary(model = fitted_bc_model, condition = "bc", pID = "group")
-
-  bc_lr_test <- lr_test(fitted_bc_model, cm_bc)
-  save_summary(model = bc_lr_test, condition = "bc", pID = "LR_test_results")
-  print(bc_lr_test$indpar)
+  # save_summary(model = fitted_bc_model, condition = "bc", pID = "group")
+  # bc_lr_test <- lr_test(fitted_bc_model, cm_bc)
+  # save_summary(model = bc_lr_test, condition = "bc", pID = "LR_test_results")
+  # print(bc_lr_test$indpar)
   saveRDS(
     fitted_bc_model,
     here("grt", "model_outputs", "bc_model_wind.rds")
   )
   print(proc.time() - start)
 }
-
-# plots -----
-# plot(
-#   fitted_ab_model,
-#   labels = c("Shape Asymmetry", "Border Regularity")
-# )
-# plot(
-#   fitted_ac_model,
-#   labels = c("Shape Asymmetry","Uniform Colour")
-# )
-# plot(
-#   fitted_bc_model,
-#   labels = c("Border Regularity", "Uniform Colour")
-# )

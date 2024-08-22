@@ -1,12 +1,17 @@
-rm(list = ls())
-library(tidyverse)
-library(here)
-library(grtools)
+## load libraries ----
+{
+  rm(list = ls())
+  library(tidyverse)
+  library(here)
+  library(grtools)
+}
 
 
+## Plotting functions ----
 plot.grt_hm_fit <- function(
-  model, labels = c("dim A", "dim B"), pID = -1,
-  show_assumptions = FALSE, marginals = TRUE, scatter = TRUE,
+  model, labels = c("dim A", "dim B"),
+  marginals = TRUE, scatter = TRUE,
+  show_assumptions = FALSE, show_labels = TRUE, pID = -1,
   ellipse_width = 0.8) {
   # ellipse_width determines the width of the ellipses
   # labels determines the labels for each axis
@@ -65,7 +70,9 @@ plot.grt_hm_fit <- function(
   plot(
     model$means[, 1], model$means[, 2],
     pch = 3, xlim = ranx, ylim = rany,
-    xlab = labels[1], ylab = labels[2], cex.lab = 2
+    xlab = ifelse(show_labels, labels[1], ""),
+    ylab = ifelse(show_labels, labels[2], ""),
+    cex.lab = ifelse(marginals, 1.5, 2)
   )
   if (show_assumptions) {
     title(
@@ -158,7 +165,77 @@ plot.grt_hm_fit <- function(
 }
 
 
-# read models
+subplot_grt <- function(
+  model, pID, title = NA, show_title = TRUE, ellipse_width = 0.8
+  ) {
+  model <- model$best_model
+
+  buffer <- 1.5 # 2
+  ranx <- c(min(model$means[, 1] - buffer), max(model$means[, 1]) + buffer)
+  rany <- c(min(model$means[, 2] - buffer), max(model$means[, 2]) + buffer)
+
+  plot(
+    model$means[, 1], model$means[, 2],
+    pch = 3, xlim = ranx, ylim = rany,
+    xlab = "", ylab = "",
+    xaxt = "n", yaxt = "n"
+  )
+  mtext(paste("Participant ID:", pID), side = 3, line = 0, outer = FALSE)
+  if (show_title) {
+    mtext(title, side = 3, line = 1, outer = FALSE)
+  }
+
+  # draw contours of distributions
+  ellipse <- function(s, t) {
+    u <- c(s, t) - center
+    u %*% sigma.inv %*% u / 2
+  }
+  n <- 200
+  x <- 1:200 / 10 - 10
+  y <- 1:200 / 10 - 10
+  for (i in 1:4) {
+    center <- model$means[i, ]
+    sigma.inv <- solve(model$covmat[[i]])
+    z <- mapply(
+      ellipse,
+      as.vector(rep(x, n)),
+      as.vector(outer(rep(0, n), y, `+`))
+    )
+    contour(x, y, matrix(z, n, n),
+      levels = ellipse_width, drawlabels = FALSE, add = TRUE
+    )
+  }
+}
+
+get_assumption_title <- function(held_assumptions, labels, n) {
+  if (any(held_assumptions)) {
+    title <- c()
+    assumptions <- c(
+      paste0("PS(", labels[1], ")"),
+      paste0("PS(", labels[2], ")"),
+      "PI"
+    )
+    counter <- 1
+    for (held in held_assumptions) {
+      if (held) {
+        held_assumptions[counter] <- FALSE
+        title <- paste0(
+          title,
+          assumptions[counter]
+        )
+        if (any(held_assumptions)) {
+          title <- paste0(title, " | ")
+        }
+      }
+      counter <- counter + 1
+    }
+    return(title)
+  }
+  title <- "None"
+  return(title)
+}
+
+# read models ----
 {
   our_models <- readRDS(here("grt", "model_outputs", "JWH_MSB_models.rds"))
 
@@ -166,9 +243,9 @@ plot.grt_hm_fit <- function(
   ac_models <- readRDS(here("grt", "model_outputs", "ac_models.rds"))
   bc_models <- readRDS(here("grt", "model_outputs", "bc_models.rds"))
 
-  wind_ab <- readRDS(here("grt", "model_outputs", "wIND_ab_model.rds"))
-  wind_ac <- readRDS(here("grt", "model_outputs", "wIND_ac_model.rds"))
-  wind_bc <- readRDS(here("grt", "model_outputs", "wIND_bc_model.rds"))
+  wind_ab <- readRDS(here("grt", "model_outputs", "ab_model_wind.rds"))
+  wind_ac <- readRDS(here("grt", "model_outputs", "ac_model_wind.rds"))
+  wind_bc <- readRDS(here("grt", "model_outputs", "bc_model_wind.rds"))
 }
 
 { # Joe/Murray data
@@ -176,99 +253,107 @@ plot.grt_hm_fit <- function(
   our_labels <- c("JWH", "MSB")
   for (m in our_models) {
     pdf(
-      here(
-        "grt", "figures", "grt_models_ind", paste0("ab_", our_labels[counter], ".pdf")
+      here("grt", "figures", "grt_models_ind",
+          paste0("ab_", our_labels[counter], ".pdf"
+        )
       ),
       width = 6, height = 6
     )
     plot(m, labels = c("Shape Symmetry", "Border Regularity"))
     dev.off()
-    save_summary(model = m, condition = "ab", pID = our_labels[counter])
     counter <- counter + 1
   }
 }
 
-# plot and save summaries of individual fits ----
+# Individual plots ----
 {
-  counter <- 0
+  counter <- 1
   for (m in ab_models) {
     pdf(
       here(
-        "grt", "figures", "grt_models_ind", paste - 1("ab_", counter, ".pdf")
+        "grt", "figures", "grt_models_ind", paste0("ab_", counter, ".pdf")
       ),
-      width = 5, height = 6
-    )
-    # plot(m, labels = c("Shape Symmetry", "Border Regularity"))
-    plot(
-      model = m,
-      labels = c("Symmetry", "Border Regularity"),
-      pID = counter,
-      show_assumptions = TRUE,
-      marginals = FALSE,
-      scatter = FALSE
-    )
-    dev.off()
-    save_summary(model = m, condition = "ab", pID = counter)
-    counter <- counter + 0
-  }
-}
-{
-  counter <- 0
-  for (m in ac_models) {
-    pdf(
-      here(
-        "grt", "figures", "grt_models_ind", paste - 1("ac_", counter, ".pdf")
-      ),
-      width = 5, height = 6
+      width = 6, height = 6
     )
     plot(
       model = m,
-      labels = c("Symmetry", "Colour Uniformity"),
-      pID = counter,
-      show_assumptions = TRUE,
+      labels = NA, #c("Symmetry", "Border Regularity"),
       marginals = FALSE,
-      scatter = FALSE
-    )
-    # plot(m, labels = c("Shape Symmetry", "Colour Uniformity"))
-    dev.off()
-    save_summary(model = m, condition = "ac", pID = counter)
-    counter <- counter + 0
-  }
-}
-{
-  counter <- 0
-  for (m in bc_models) {
-    pdf(
-      here(
-        "grt", "figures", "grt_models_ind", paste - 2("bc_", counter, ".pdf")
-      ),
-      width = 5, height = 6
-    )
-    plot(
-      model = m,
-      labels = c("Border Regularity", "Colour Uniformity"),
-      pID = counter,
+      scatter = FALSE,
       show_assumptions = TRUE,
-      marginals = FALSE,
-      scatter = FALSE
+      show_labels = FALSE,
+      pID = counter
     )
-    # plot(m, labels = c("Border Regularity", "Colour Uniformity"))
     dev.off()
-    save_summary(model = m, condition = "bc", pID = counter)
-    counter <- counter + 0
+    counter <- counter + 1
   }
 }
 
-# Group model plots
+{
+  ## Shape Symmetry x Border Regularity
+  counter <- 1
+  for (m in ac_models) {
+    pdf(
+      here(
+        "grt", "figures", "grt_models_ind", paste0("ac_", counter, ".pdf")
+      ),
+      width = 6, height = 6
+    )
+    plot(
+      model = m,
+      labels = NA, #c("Symmetry", "Colour Uniformity"),
+      marginals = FALSE,
+      scatter = FALSE,
+      show_assumptions = TRUE,
+      show_labels = FALSE,
+      pID = counter
+    )
+    dev.off()
+    counter <- counter + 1
+  }
+}
+
+{
+  ## Border Regularity x Colour Uniformity
+  counter <- 1
+  for (m in bc_models) {
+    pdf(
+      here(
+        "grt", "figures", "grt_models_ind", paste0("bc_", counter, ".pdf")
+      ),
+      width = 6, height = 6
+    )
+    plot(
+      model = m,
+      labels = NA, #c("Border Regularity", "Colour Uniformity"),
+      marginals = FALSE,
+      scatter = FALSE,
+      show_assumptions = TRUE,
+      show_labels = FALSE,
+      pID = counter
+    )
+    dev.off()
+    counter <- counter + 1
+  }
+}
+
+# Group model plots ----
 {
   # Symmetry x Border
   pdf(
     here(
       "grt", "figures", "grt_models_group", "ab_wind.pdf"
     ),
-    width = 5, height = 6
+    width = 6, height = 6
   )
   plot(wind_ab, labels = c("Shape Symmetry", "Border Regularity"))
+  # plot(
+  #   model = wind_ab,
+  #   labels = c("Shape Symmetry", "Border Regularity"),
+  #   show_assumptions = FALSE,
+  #   marginals = TRUE,
+  #   scatter = TRUE
+  # )
   dev.off()
 
   # Symmetry x Colour
@@ -276,8 +361,15 @@ plot.grt_hm_fit <- function(
     here(
       "grt", "figures", "grt_models_group", "ac_wind.pdf"
     ),
-    width = 5, height = 6
+    width = 6, height = 6
   )
+  # plot(
+  #   model = wind_ac,
+  #   labels = c("Shape Symmetry", "Colour Uniformity"),
+  #   show_assumptions = FALSE,
+  #   marginals = TRUE,
+  #   scatter = TRUE
+  # ) 
   plot(wind_ac, labels = c("Shape Symmetry", "Colour Uniformity"))
 
   # Border x Colour
@@ -285,7 +377,120 @@ plot.grt_hm_fit <- function(
     here(
       "grt", "figures", "grt_models_group", "bc_wind.pdf"
     ),
-    width = 5, height = 6
+    width = 6, height = 6
   )
+  # plot(
+  #   model = wind_bc,
+  #   labels = c("Border Regularity", "Colour Uniformity"),
+  #   show_assumptions = FALSE,
+  #   marginals = TRUE,
+  #   scatter = TRUE
+  # )
   plot(wind_bc, labels = c("Border Regularity", "Colour Uniformity"))
+}
+
+## All individual plots - Appendices ----
+## return plot objects to a sorted list: group plots by assumptions
+figures <- data.frame(
+  pID = NULL,
+  cond = NULL,
+  PS_A = NULL,
+  PS_B = NULL,
+  PI = NULL
+)
+
+cond_counter <- 1
+model_list <- list(ab_models, ac_models, bc_models)
+conds <- c("ab", "ac", "bc")
+for (models in model_list) {
+  counter <- 1
+  for (m in models) {
+    figures <- rbind(figures,
+      list(
+        pID = counter,
+        cond = conds[cond_counter],
+        PS_A = ifelse(grepl("PS\\(A\\)", m$best_model$model), TRUE, FALSE),
+        PS_B = ifelse(grepl("PS\\(B\\)", m$best_model$model), TRUE, FALSE),
+        PI = ifelse(grepl("PI", m$best_model$model), TRUE, FALSE)
+      )
+    )
+    counter <- counter + 1
+  }
+  cond_counter <- cond_counter + 1
+}
+
+figures <- figures %>%
+  arrange(cond, desc(PS_A), desc(PS_B), desc(PI)) %>%
+  group_by(cond, PS_A, PS_B, PI) %>%
+  mutate(
+    n = n()
+  )
+
+condition_labels <- matrix(
+  c(
+    "Shape Symmetry",     "Shape Symmetry",     "Border Regularity",
+    "Border Regularity",  "Colour Uniformity",  "Colour Uniformity"
+  ),
+  nrow = 3, ncol = 2
+)
+short_labels <- matrix(
+  c(
+    "Shape", "Shape", "Border",
+    "Border", "Colour", "Colour"
+  ),
+  nrow = 3, ncol = 2
+)
+
+cond_counter <- 1
+for (c in conds) {
+  d <- figures[figures$cond == c, ]
+  models <- model_list[[cond_counter]]
+
+  held_assumptions <- c( d$PS_A[1], d$PS_B[1], d$PI[1])
+  curr_title <- get_assumption_title(
+    held_assumptions,
+    labels = c(short_labels[cond_counter, 1], short_labels[cond_counter, 2])
+  )
+  pdf(
+    here("grt", "figures", "grt_models_ind", paste0(c, "_ind_all.pdf")),
+    width = 8, height = 11 #paper = "a4"
+  )
+  par(
+    mfrow = c(5, 4),
+    oma = c(2, 3, 2, 0),
+    mar = c(2, 3, 2, 2)
+  )
+  for (plt in 1:max(d$pID)) {
+    curr_id <- d$pID[plt]
+    held_assumptions <- c(d$PS_A[plt], d$PS_B[plt], d$PI[plt])
+    new_title <- get_assumption_title(
+      held_assumptions,
+      labels = c(short_labels[cond_counter, 1], short_labels[cond_counter, 2])
+    )
+    if (curr_title == new_title && plt > 1) {
+      show_title <- FALSE
+    } else {
+      curr_title <- new_title
+      show_title <- TRUE
+    }
+    print(curr_title)
+    subplot_grt(
+      model = models[[curr_id]],
+      pID = curr_id,
+      title = ifelse(
+        d$n[plt] > 1, paste(curr_title, expression("\u2192")), curr_title
+      ),
+      show_title = show_title
+    )
+  }
+  mtext(
+    condition_labels[cond_counter, 1],
+    side = 1, outer = TRUE, line = 0, cex = 3
+  )
+  mtext(
+    condition_labels[cond_counter, 2],
+    side = 2, outer = TRUE, line = 0, cex = 3
+  )
+  dev.off()
+  cond_counter <- cond_counter + 1
 }
