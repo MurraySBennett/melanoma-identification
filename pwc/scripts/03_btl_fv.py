@@ -7,8 +7,8 @@ import numpy as np
 
 # font = FontProperties(fname="Garamond BoldCondensed.ttf")
 font = FontProperties()
-FONT_COLOUR = "black" #"#0c2340" # the hex code for contour_colour
-FONT_SIZE = 20
+FONT_COLOUR = "black" #/"#0c2340" # the hex code for contour_colour
+FONT_SIZE   = 20
 LINE_COLOUR = "black"#"#D4440D"
 AXIS_LABEL_FONT_SIZE = 18
 plt.rcParams['text.antialiased'] = True
@@ -16,11 +16,11 @@ plt.rcParams['font.family'] = font.get_name()
 plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
 plt.rcParams['pdf.fonttype'] = 42
 
-
 home        = Path(__file__).resolve().parent.parent 
-data_path   = home / "data" / "estimates" / "btl-cv-data.csv"
-img_path    = home.parent / "images" / "resized" 
-fig_path    = home / "figures" 
+data_path   = home / "data" / "estimates" / "btl_cv_data.csv"
+
+img_path    = home.parent / "images" / "resized"
+fig_path    = home / "figures"
 data = pd.read_csv(data_path)
 
 features    = ['pi_sym', 'pi_bor', 'pi_col']
@@ -106,7 +106,11 @@ for j, level in enumerate(levels):
 
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.02, hspace=0.02)
+
+
+
 plt.savefig(
     fig_path / "btl_facevalidity.pdf",
     format='pdf', dpi=600, bbox_inches='tight'
 )
+

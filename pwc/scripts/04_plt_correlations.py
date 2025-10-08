@@ -14,7 +14,7 @@ import pandas as pd
 import seaborn as sns
 
 font = FontProperties()
-FONT_COLOUR = "black" # the hex code for contour_colour
+FONT_COLOUR = "black"
 FONT_SIZE = 20
 AXIS_LABEL_FONT_SIZE = 18
 TEXT_FONT_SIZE = 16
@@ -26,8 +26,9 @@ plt.rcParams['pdf.fonttype'] = 42
 home = Path(__file__).resolve().parent.parent
 paths = dict(
     figures = home / "figures",
-    data = home / "data" / "estimates" / "btl-cv-data.csv"
+    data = home / "data" / "estimates" / "btl_cv_data.csv",
 )
+
 data = pd.read_csv(paths["data"])
 data = abc_aligned(data)
 data = cv_btl_scale(data, replace=True)
@@ -141,7 +142,7 @@ if SHOW_FIG:
                 )
             cor_stats = get_rho(data[features_cv[i]], data[features_btl[i]])
             ax.text(
-                0.95, 0.1, r"$\rho = $" + f"{np.round(cor_stats['r'],3)}",
+                0.95, 0.1, r"r = " + f"{np.round(cor_stats['r'],3)}",
                 transform=ax.transAxes, fontsize=TEXT_FONT_SIZE, color=FONT_COLOUR,
                 verticalalignment='top', horizontalalignment='right', fontproperties=font
             )
@@ -177,8 +178,11 @@ if SHOW_FIG:
 
     plt.rc_context({'ytick.color':FONT_COLOUR, 'ytick.size':12})
     plt.tight_layout()
+
+
+
     plt.savefig(
-        paths['figures'] / 'btl_cv_cor.pdf',
+        paths['figures'] / "btl_cv_cor.pdf",
         format='pdf', dpi=600, bbox_inches='tight'
     )
 
@@ -200,8 +204,8 @@ if SHOW_FIG:
             ax=axes
         )
     axes.tick_params(axis='both', which='both', length=0)
-
     plt.tight_layout()
+
     plt.savefig(
         paths["figures"] / "btl_cv_cor_mat.pdf",
         format="pdf", dpi=600, bbox_inches="tight"

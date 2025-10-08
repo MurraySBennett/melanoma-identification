@@ -9,21 +9,26 @@ def main(feature, save_data):
     if feature is not None:
         for f in feature: 
             if f == "symmetry":
-                data = pd.read_csv(data_path / "btl-asymmetry.csv")
+                data = pd.read_csv(data_path / "btl_asymmetry.csv")
             elif f == "border":
-                data = pd.read_csv(data_path / "btl-border.csv")
+                data = pd.read_csv(data_path / "btl_border.csv")
             elif f == "colour":
-                data = pd.read_csv(data_path / "btl-colour.csv")
-            print(f"working on {f}")
+                data = pd.read_csv(data_path / "btl_colour.csv")
 
+            data = data[data['ended_on'] == 'response']
+
+            print(f"working on {f}")
             X, y = sparse_format(data)
             r, r_mid, r_slope = lm(X, y, penalty="l2")
             r = r.to_frame().reset_index().rename(columns={"index": "id", 0: "pi"})
+
+            r["pi"] = round(r["pi"], 6)
+
             print(f"slope: {r_slope}, midpoint: {r_mid}")
 
             if save_data:
                 r.to_csv(
-                    estimates / f"btl-scores-{f}.csv",
+                    estimates / f"btl_scores_{f}.csv",
                     index = False
                 )
 
@@ -80,12 +85,6 @@ if __name__ == "__main__":
     # parser.add_argument("feature", choices=["symmetry", "border", "colour"], help="Feature to process")
     # args = parser.parse_args()
     # main(args.feature)
-    feature = ["symmetry", "border", "colour"]
-    save_data = True
-    main(feature, save_data)
-
-
-# https://www.google.com/search?q=perceptual+rating+of+melanoma+features+human+perception+judgment&sca_esv=564367827&ei=vTL_ZOfWBY_W5NoP1P-wuAU&ved=0ahUKEwinqdef8KKBAxUPK1kFHdQ_DFcQ4dUDCBA&uact=5&oq=perceptual+rating+of+melanoma+features+human+perception+judgment&gs_lp=Egxnd3Mtd2l6LXNlcnAiQHBlcmNlcHR1YWwgcmF0aW5nIG9mIG1lbGFub21hIGZlYXR1cmVzIGh1bWFuIHBlcmNlcHRpb24ganVkZ21lbnRIxEBQkRFYzDVwB3gBkAEBmAHCAaAB-xeqAQQ2LjIxuAEDyAEA-AEBwgIKEAAYRxjWBBiwA8ICCBAAGIkFGKIEwgIFEAAYogTiAwQYACBBiAYBkAYI&sclient=gws-wiz-serp
-# https://www.mdpi.com/2075-1729/13/4/974
-# https://academic.oup.com/milmed/article/185/3-4/506/5607587
-# https://scholar.google.com/scholar?hl=en&as_sdt=0%2C44&q=human+judgment+melanoma+features+costly+time+and+financial&btnG=
+    features = ["symmetry", "border", "colour"]
+    SAVE_DATA = True
+    main(features, SAVE_DATA)

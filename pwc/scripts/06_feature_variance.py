@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 home        = Path(__file__).resolve().parent.parent
-data_path   = home / "data" / "estimates" / "btl-cv-data.csv"
+data_path   = home / "data" / "estimates" / "btl_cv_data.csv"
 img_path    = home.parent / "images" / "resized"
 figure_path = home / "figures"
 data = pd.read_csv(data_path)

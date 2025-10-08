@@ -1,4 +1,6 @@
 from pathlib import Path
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFECV
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score, train_test_split
@@ -7,6 +9,7 @@ from sklearn.metrics import auc, roc_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from cv_transforms import abc_aligned, cv_btl_scale
+import statsmodels.api as sm
 import joblib
 import matplotlib
 matplotlib.use("Agg")
@@ -14,6 +17,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+ADD_LR = True
+
+home = Path(__file__).resolve().parent.parent 
+paths = {
+    "data": home / "data" / "estimates" / "btl_cv_data.csv",
+    "figures": home / "figures",
+    "scripts": home / "scripts",
+    "effnet": home.parent / "melnet" / "data"
+}
 
 # plotting variables
 UTSA_BLUE       = "#0c2340"
@@ -32,27 +44,34 @@ colours = [
 colours = np.divide(colours, 255)
 
 plt.rcParams['text.antialiased']= True
-plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
+plt.rcParams['pdf.compression'] = 3
 plt.rcParams['pdf.fonttype']    = 42
 
+def main():
+    feature_labels  = ["sym", "bor", "col", "pi_sym", "pi_bor", "pi_col"]
+    predict_label   = ["malignant"]
 
-home = Path(__file__).resolve().parent.parent 
-paths = {
-    "data": home / "data" / "estimates" / "btl-cv-data.csv"
-    "figures": home / "figures",
-    "scripts": home / "scripts",
-    "effnet": home.parent / "melnet" / "data"
-}
-data            = pd.read_csv(paths["data"])
-data            = abc_aligned(data)
-data            = cv_btl_scale(data, replace=True)
-feature_labels  = ["sym", "bor", "col", "pi_sym", "pi_bor", "pi_col"]
-predict_label   = ["malignant"]
-data            = data[["id"] + feature_labels + predict_label]
-data            = data.dropna(axis=0)
+    effnet    = [True, False]
+    data = get_data()
+    data = data[["id"] + feature_labels + predict_label]
+    data = data.dropna(axis=0)
+    X = data[feature_labels]
+    y = data["malignant"]
 
-y = data["malignant"]
-X = data[feature_labels]
+    models = feature_comparison_AUC(param_grid, data, feature_labels, save_models=False, revised=rev)
+    sw_lr = stepwise_LR(X, y)
+    for en in effnet:
+        for lr in [sw_lr, None]:
+            roc_auc(models, ["CV + BTL", "CV", "BTL"], rev, en, lr)
+
+    # roc_auc(models, ["CV + BTL", "CV", "BTL"], revised=REVISED, include_effnet=False, logreg=sw_lr)
+
+
+def get_data():
+    df = pd.read_csv(paths["data"])
+    df = abc_aligned(df)
+    df = cv_btl_scale(df, replace=True)
+    return df
 
 param_grid = {
     "probability": [True],
@@ -92,33 +111,33 @@ def print_score(model, x_train, y_train, x_test, y_test, train=True):
         print(f"Confusions:\nTP: {TP}\nTN: {TN}\nFP: {FP}\nFN: {FN}\n")
 
 
-def test_model(x, y):
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42)
-    model.fit(x_train, y_train)
-    # print_score(model, x_train, y_train, x_test, y_test, train=True)
-    print_score(model, x_train, y_train, x_test, y_test, train=False)
+# def test_model(model, x, y):
+#     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42)
+#     model.fit(x_train, y_train)
+#     # print_score(model, x_train, y_train, x_test, y_test, train=True)
+#     print_score(model, x_train, y_train, x_test, y_test, train=False)
 
 
-def feature_comparison(df, f_labels):
-    x = df[f_labels[:3]]
-    print(f"Features: {f_labels[:3]}")
-    test_model(x, y)
+# def feature_comparison(df, f_labels, model):
+#     x = df[f_labels[:3]]
+#     print(f"Features: {f_labels[:3]}")
+#     test_model(model, x, y)
 
-    x = df[f_labels[3:]]
-    print(f"Features: {f_labels[3:]}")
-    test_model(x, y)
+#     x = df[f_labels[3:]]
+#     print(f"Features: {f_labels[3:]}")
+#     test_model(model, x, y)
 
-    x = df[f_labels]
-    print(f"Features: {f_labels}")
-    test_model(x, y)
+#     x = df[f_labels]
+#     print(f"Features: {f_labels}")
+#     test_model(model, x, y)
 
 
-def best_parms(model, x_train, y_train, param_grid, refit=True, verbose=1, cv=5):
-    grid = GridSearchCV(model, param_grid, refit=refit, verbose=verbose, cv=cv, n_jobs=-1)
+def best_parms(model, x_train, y_train, paramater_grid, refit=True, verbose=1, cv=5):
+    grid = GridSearchCV(model, paramater_grid, refit=refit, verbose=verbose, cv=cv, n_jobs=-1)
     grid.fit(x_train, y_train)
-    best_parms = grid.best_params_
-    print(best_parms)
-    return best_parms
+    best_parmaters = grid.best_params_
+    print(best_paramaters)
+    return best_paramaters
 
 
 def fit_best(parms, x_train, y_train): #, x_test, y_test):
@@ -132,7 +151,7 @@ def fit_best(parms, x_train, y_train): #, x_test, y_test):
     return model
 
 
-def feature_comparison_AUC(param_grid, df, f_labels, save_models=False):
+def feature_comparison_AUC(param_grid, df, f_labels, save_models=False, revised=False):
     x = df[f_labels].copy()
     scaler = StandardScaler().fit(x)
     x = scaler.transform(x)
@@ -149,7 +168,10 @@ def feature_comparison_AUC(param_grid, df, f_labels, save_models=False):
         print("================== All features ==================")
         parms = best_parms(SVC(), x, y, param_grid)
         model_all = fit_best(parms, x, y)
-        joblib.dump(model_all, paths["scripts"] / "svm_model_combined.pkl")
+        if revised:
+            joblib.dump(model_all, paths["scripts"] / "svm_model_combined_revised.pkl")
+        else:
+            joblib.dump(model_all, paths["scripts"] / "svm_model_combined.pkl")
 
         print("================== CV features ==================")
         parms = best_parms(SVC(), x_cv, y, param_grid)
@@ -159,12 +181,19 @@ def feature_comparison_AUC(param_grid, df, f_labels, save_models=False):
         print("================== BTL features ==================")
         parms = best_parms(SVC(), x_btl, y, param_grid)
         model_btl = fit_best(parms, x_btl, y)
-        joblib.dump(model_btl, paths["scripts"] / "svm_model_btl.pkl")
+        if revised:
+            joblib.dump(model_btl, paths["scripts"] / "svm_model_btl_revised.pkl")
+        else:
+            joblib.dump(model_btl, paths["scripts"] / "svm_model_btl.pkl")
 
     else:
-        model_all   = joblib.load(paths["scripts"] / "svm_model_combined.pkl")
         model_cv    = joblib.load(paths["scripts"] / "svm_model_cv.pkl")
-        model_btl   = joblib.load(paths["scripts"] / "svm_model_btl.pkl")
+        if revised:
+            model_all   = joblib.load(paths["scripts"] / "svm_model_combined_revised.pkl")
+            model_btl   = joblib.load(paths["scripts"] / "svm_model_btl_revised.pkl")
+        else:
+            model_all   = joblib.load(paths["scripts"] / "svm_model_combined.pkl")
+            model_btl   = joblib.load(paths["scripts"] / "svm_model_btl.pkl")
         
     return [(model_all,(x, y)),
             (model_cv, (x_cv, y)),
@@ -203,7 +232,7 @@ def feature_comparison_AUC(param_grid, df, f_labels, save_models=False):
 #         s=250,
 #         facecolors="none",
 #         edgecolors="k",
-#     )
+#     m)
 #     # Plot samples by color and add legend
 #     ax.scatter(X[:, 0], x[:, 1], c=y, s=150, edgecolors="k")
 #     ax.legend(*scatter.legend_elements(), loc="upper right", title="Classes")
@@ -211,11 +240,11 @@ def feature_comparison_AUC(param_grid, df, f_labels, save_models=False):
 #     return fig
 
 
-def roc_auc(models, plot_labels, include_effnet=False):
+def roc_auc(models, plot_labels, revised, include_effnet=False, logreg=None):
     features    = ["CV_A", "CV_B", "CV_C", "A", "B", "C"]
     counter     = 0
     roc_fig, roc_ax = plt.subplots(1,1,figsize=(6,6))
-    for model, data in models:
+    for model, model_data in models:
         label = plot_labels[counter]
         if label == "CV + BTL":
             f_labels = np.array(features)
@@ -224,7 +253,7 @@ def roc_auc(models, plot_labels, include_effnet=False):
         else:
             f_labels = np.array(features[3:])
 
-        x, y = data
+        x, y = model_data
         model.fit(x, y)
 
         fv_fig, fv_ax = plt.subplots(1,1,figsize=(6,6))
@@ -241,13 +270,17 @@ def roc_auc(models, plot_labels, include_effnet=False):
         fv_ax.tick_params(axis='both', labelsize=AXIS_FONT_SIZE)
         fv_ax.spines['top'].set_visible(False)
         fv_ax.spines['right'].set_visible(False)
+        fig_label = f"feature-values-{label}"
+        if revised:
+            fig_label += "-revised"
+
         fv_fig.savefig(
-            paths["figures"] / f"feature-values-{label}.pdf",
+            paths["figures"] / f"{fig_label}.pdf",
             format='pdf', dpi=600, bbox_inches='tight'
         )
 
         y_scores = model.predict_proba(x)[:,1]
-        fpr, tpr, thresholds = roc_curve(y, y_scores)
+        fpr, tpr, _ = roc_curve(y, y_scores)
         roc_auc = auc(fpr,tpr)
 
         roc_ax.plot(
@@ -273,6 +306,13 @@ def roc_auc(models, plot_labels, include_effnet=False):
             linewidth=3, label=f'EN: {effnet_auc:.2f}'
         )
 
+    if logreg is not None:
+        roc_ax.plot(
+            logreg['fpr'], logreg['tpr'],
+            linewidth=3, label=f'LR: {logreg['roc_auc']:.2f}'
+        )
+        
+
     roc_ax.plot(
         [0, 1], [0, 1],
         'k--', linewidth=2
@@ -286,15 +326,70 @@ def roc_auc(models, plot_labels, include_effnet=False):
         loc='lower right', title="ROC",
         fontsize=TEXT_FONT_SIZE, title_fontsize=AXIS_FONT_SIZE
     )
+    save_label = "SVM_ROC"
+    if revised:
+        save_label += "_revised"
+    if include_effnet:
+        save_label += "_EN"
+    if logreg is not None:
+        save_label += "_LR"
+    pdf_label = f"{save_label}.pdf"
+    png_label = f"{save_label}.png"
     roc_fig.savefig(
-        paths["figures"] / "SVM_ROC.pdf",
+        paths["figures"] / pdf_label,
         format="pdf", bbox_inches="tight"
     )
     roc_fig.savefig(
-        paths["figures"] / "SVM_ROC.png",
+        paths["figures"] / png_label,
         format="png", dpi=600, bbox_inches="tight"
     )
 
 
-models = feature_comparison_AUC(param_grid, data, feature_labels, save_models=False)
-roc_auc(models, ["CV + BTL", "CV", "BTL"], include_effnet=False)
+def stepwise_LR(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    logreg = LogisticRegression()
+    # recursive feature elimination w cross validation
+    rfe = RFECV(logreg, step=1, cv=5)
+    rfe = rfe.fit(X_train, y_train)
+
+    # get features
+    selected_features = X.columns[rfe.support_]
+    print(f"Optimal number of features: {rfe.n_features_}")
+    print(f"Selected features: {selected_features}")
+
+    # train LR with features
+    logreg.fit(X_train[selected_features], y_train)
+    # predicted probabilities for test set
+    y_pred_prob = logreg.predict_proba(X_test[selected_features])[:, 1]
+    fpr, tpr, _ = roc_curve(y_test, y_pred_prob)
+    roc_auc = auc(fpr, tpr)
+
+    y_pred = rfe.predict(X_test)
+    print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
+
+    # display decisions of the model and value of eahc feature
+    # decisions = logreg.decision_function(X_test[selected_features])
+    # feature_values = X_test[selected_features]
+    # print("Model decisions: ", decisions)
+    # print("Values of each feature: ", feature_values)
+
+    # print values of each feature's contribution to the model
+    coefficients = logreg.coef_[0]
+    for f, coef in zip(selected_features, coefficients):
+        # how much more likely lesion is malignant for a one-unit increase in each feature.
+        # e.g., if sym = 1.5, then a +1 in symmetry increases the odds of malignancy by 1.5
+        print(f"Feature: {f}, Coefficient: {coef: .3f}, odds ratio: {np.exp(coef):.3f}")
+
+    X_train_const = sm.add_constant(X_train[selected_features])
+    logit_model = sm.Logit(y_train, X_train_const)
+    result = logit_model.fit()
+    print(result.summary())
+    # const is the log-odds of malignancy when all features are 0
+
+    return {'model': logreg, 'fpr': fpr, 'tpr': tpr, 'roc_auc': roc_auc}
+
+
+
+if __name__ == '__main__':
+    main()

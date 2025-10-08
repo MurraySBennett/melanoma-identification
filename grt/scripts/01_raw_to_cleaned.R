@@ -27,7 +27,7 @@ get_condition <- function(x) {
 
 
 for (f in files) {
-  data <- read.csv(here("grt", "experiment", "data", "raw", f))
+  data <- read.csv(here("grt", "data", "raw", f))
   data <- data %>%
     clean_names() %>%
     rename(rt = duration, stimulus = correct_response) %>%
@@ -59,3 +59,4 @@ for (f in files) {
   write_csv(data, here("grt", "data", "cleaned", file_id))
   participant_counter <- participant_counter + 1
 }
+

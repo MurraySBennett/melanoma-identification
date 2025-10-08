@@ -4,15 +4,24 @@
   library(tidyverse)
   library(here)
   library(grtools)
+  library(gridExtra)
 }
 
 
 ## Plotting functions ----
+# if you want to be plotting the group, you need to change this to plot.grt_wind_fit
 plot.grt_hm_fit <- function(
   model, labels = c("dim A", "dim B"),
   marginals = TRUE, scatter = TRUE,
   show_assumptions = FALSE, show_labels = TRUE, pID = -1,
-  ellipse_width = 0.8) {
+  ellipse_width = 0.8
+  ) {
+  if (dev.cur() > 1) {
+    dev.off()
+    dev.new()
+  }
+  on.exit(dev.off())
+  
   # ellipse_width determines the width of the ellipses
   # labels determines the labels for each axis
   model <- model$best_model
@@ -207,6 +216,7 @@ subplot_grt <- function(
   }
 }
 
+
 get_assumption_title <- function(held_assumptions, labels, n) {
   if (any(held_assumptions)) {
     title <- c()
@@ -339,6 +349,8 @@ get_assumption_title <- function(held_assumptions, labels, n) {
 
 # Group model plots ----
 {
+  # Using the plotting function from the IAT_SFT project to remove marginals and add labels
+  cat_levels=c("Low", "High", "Low", "High")
   # Symmetry x Border
   pdf(
     here(
@@ -346,7 +358,7 @@ get_assumption_title <- function(held_assumptions, labels, n) {
     ),
     width = 6, height = 6
   )
-  plot(wind_ab, labels = c("Shape Symmetry", "Border Regularity"))
+  plot(wind_ab, cat_labels = c("Shape Symmetry", "Border Regularity"), cat_levels=cat_levels)
   # plot(
   #   model = wind_ab,
   #   labels = c("Shape Symmetry", "Border Regularity"),
@@ -356,6 +368,7 @@ get_assumption_title <- function(held_assumptions, labels, n) {
   # )
   dev.off()
 
+  
   # Symmetry x Colour
   pdf(
     here(
@@ -370,7 +383,8 @@ get_assumption_title <- function(held_assumptions, labels, n) {
   #   marginals = TRUE,
   #   scatter = TRUE
   # ) 
-  plot(wind_ac, labels = c("Shape Symmetry", "Colour Uniformity"))
+  plot(wind_ac, cat_labels = c("Shape Symmetry", "Colour Uniformity"), cat_levels=cat_levels)
+  dev.off()
 
   # Border x Colour
   pdf(
@@ -386,7 +400,8 @@ get_assumption_title <- function(held_assumptions, labels, n) {
   #   marginals = TRUE,
   #   scatter = TRUE
   # )
-  plot(wind_bc, labels = c("Border Regularity", "Colour Uniformity"))
+  plot(wind_bc, cat_labels = c("Border Regularity", "Colour Uniformity"), cat_levels=cat_levels)
+  dev.off()
 }
 
 ## All individual plots - Appendices ----
@@ -494,3 +509,4 @@ for (c in conds) {
   dev.off()
   cond_counter <- cond_counter + 1
 }
+

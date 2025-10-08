@@ -20,7 +20,7 @@ sona_ids = dict(id=[], n_trials=[])
 subject = 1
 
 def main():
-    save_data   = False
+    save_data   = True
     n_files     = None
     here        = Path(__file__).resolve().parent 
     home_path   = Path(__file__).resolve().parent.parent
@@ -63,6 +63,7 @@ def main():
         ]
     return_trials_remaining(data)
 
+    save_data = False
     if save_data:
         data.to_csv(
             paths["btl_data"] / "data-processed.csv",
@@ -111,7 +112,7 @@ def process_data(file):
     try:
         df = df.loc[(df["sender"] == "trial") & (df["practice"] == False)]
     except Exception as e:
-        print(f"{file} has issues filtering out extranous senders: {e}")
+        print(f"{file} has issues filtering out extraneous senders: {e}")
         if platform == "sona":
             sona_ids["n_trials"].extend([None])
         return None
@@ -127,7 +128,7 @@ def process_data(file):
 
         df["img_left"] = [x.replace(".JPG", "") for x in df["img_left"]]
         df["img_right"] = [x.replace(".JPG", "") for x in df["img_right"]]
-        df["duration"] = df["duration"] - 1500 # 1500ms used to load images. The ISI and cue are shown in this initial perdiod.
+        df["duration"] = df["duration"] - 1500 # 1500ms used to load images. The ISI and cue are shown in this initial period.
 
         duplicates = df.duplicated(subset=["blockNo", "trialNo"], keep = False)
         df = df[~duplicates]

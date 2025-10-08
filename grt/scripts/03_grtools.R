@@ -6,7 +6,8 @@ library(skimr)
 library(grtools)
 # devtools::install_github("fsotoc/grtools", dependendies="Imports")
 
-data <- read.csv(here("grt", "data", "final", "mel_grt_data.csv"))
+min_acc <- 0.25 # 0.3
+data <- read.csv(here("grt", "data", "final", paste0("mel_grt_data_min_acc_", min_acc, ".csv")))
 
 get_cm <- function(df, set_condition) {
   df <- df %>% filter(condition == set_condition, response != "")
@@ -59,29 +60,29 @@ get_microstats <- function(cm, condition, pID, summarise = TRUE) {
   cm_ac <- get_cm(data, "ac")
   cm_bc <- get_cm(data, "bc")
 
-  our_cms <- tail(cm_ab, 2)
-  cm_ab <- head(cm_ab, -2)
+  # our_cms <- tail(cm_ab, 2)
+  # cm_ab <- head(cm_ab, -2)
 }
 
 # Murray + Joe
-{
-  our_models <- list()
-  rand_pert <- 0.3
-  n_reps <- 20
-  counter <- 1
-  for (cm in our_cms) {
-    our_models[[counter]] <- grt_hm_fit(
-      cm,
-      rand_pert = rand_pert,
-      n_reps = n_reps
-    )
-    counter <- counter + 1
-  }
-  saveRDS(
-    our_models,
-    here("grt", "model_outputs", "JWH_MSB_models.rds")
-  )
-}
+# {
+#   our_models <- list()
+#   rand_pert <- 0.3
+#   n_reps <- 20
+#   counter <- 1
+#   for (cm in our_cms) {
+#     our_models[[counter]] <- grt_hm_fit(
+#       cm,
+#       rand_pert = rand_pert,
+#       n_reps = n_reps
+#     )
+#     counter <- counter + 1
+#   }
+#   saveRDS(
+#     our_models,
+#     here("grt", "model_outputs", "JWH_MSB_models.rds")
+#   )
+# }
 
 # individual fits ----
 {
@@ -154,7 +155,7 @@ n_reps <- 60
   # print(ab_lr_test$indpar)
   saveRDS(
     fitted_ab_model,
-    here("grt", "model_outputs", "ab_model_wind.rds")
+    here("grt", "model_outputs", paste0("ab_model_wind_acc_", min_acc, ".rds"))
   )
   print(proc.time() - start)
 }
@@ -171,7 +172,7 @@ n_reps <- 60
   # print(ac_lr_test$indpar)
   saveRDS(
     fitted_ac_model,
-    here("grt", "model_outputs", "ac_model_wind.rds")
+    here("grt", "model_outputs", paste0("ac_model_wind_acc_", min_acc, ".rds"))
   )
   print(proc.time() - start)
 }
@@ -189,7 +190,7 @@ n_reps <- 60
   # print(bc_lr_test$indpar)
   saveRDS(
     fitted_bc_model,
-    here("grt", "model_outputs", "bc_model_wind.rds")
+    here("grt", "model_outputs", paste0("bc_model_wind_acc_", min_acc, ".rds"))
   )
   print(proc.time() - start)
 }

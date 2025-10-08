@@ -41,6 +41,7 @@ pwc/btl_sim/*
 *.mp4
 
 # latex files
+*.tex
 *.blg
 *.fls
 *.synctex*
@@ -50,4 +51,5 @@ pwc/btl_sim/*
 *.out
 *.pdf
 *.ttl
+*.ttf
 
