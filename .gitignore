@@ -1,3 +1,19 @@
+*Strategy*.pdf
+
+# raw data
+pwc/data/raw/*
+pwc/cv/*
+pwc/btl_sim/*
+
+/grt/data/*
+# grt/data/raw/*
+# grt/data/pilot*
+# grt/data/cleaned/*
+
+# archive directories?
+*/archive/*
+
+
 # Default ignored file
 .jpg
 .JPG
@@ -5,14 +21,23 @@
 *.exe
 *.zip
 *.png
-.Rproj.user
+
+*.Rproj*
+*.Rhistory
+*.RData
+
 *.pyc
 *.pickle
+*.h5
+
 *.xlsx
+*.docx
+*.pptx
+
 *.log
+*.json
 *.pth
 *.pb
-*.Rhistory
 *.mp4
 
 # latex files
@@ -25,3 +50,4 @@
 *.out
 *.pdf
 *.ttl
+
