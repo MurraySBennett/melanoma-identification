@@ -1,38 +1,48 @@
 *Strategy*.pdf
 
 # raw data
-pwc/data/raw/*
 pwc/cv/*
 pwc/btl_sim/*
 
-/grt/data/*
 # grt/data/raw/*
 # grt/data/pilot*
 # grt/data/cleaned/*
 
+/melnet/data/*
+/melnet/models
+/melnet/tutorials/*
+
+
 # archive directories?
 */archive/*
+*/presentations/*
 
 
 # Default ignored file
-.jpg
-.JPG
+*.jpg
+*.JPG
 *.JPG
 *.exe
 *.zip
 *.png
+*.gif
 
 *.Rproj*
 *.Rhistory
 *.RData
 
+# Matlab
+*.asv
+
 *.pyc
 *.pickle
 *.h5
+*.ipynb*
 
 *.xlsx
 *.docx
 *.pptx
+*.odp
 
 *.log
 *.json
@@ -41,6 +51,7 @@ pwc/btl_sim/*
 *.mp4
 
 # latex files
+*\manuscript\*
 *.tex
 *.blg
 *.fls
@@ -52,4 +63,12 @@ pwc/btl_sim/*
 *.pdf
 *.ttl
 *.ttf
+*.bcf
+*.xml
+*.bib
+*.nav
+*.snm
+*.toc
+*.cls
+*.bst
 

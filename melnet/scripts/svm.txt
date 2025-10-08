@@ -1,0 +1,290 @@
+import pandas as pd
+import numpy as np
+from os import path
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+
+from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score, train_test_split, cross_val_predict
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import roc_auc_score, auc, roc_curve
+from sklearn.inspection import permutation_importance
+from sklearn.inspection import DecisionBoundaryDisplay
+
+from sklearn.preprocessing import StandardScaler
+
+from cv_transforms import ABC_aligned, cv_btl_scale
+
+# plotting variables
+utsa_blue = "#0c2340"
+utsa_orange = "#d3a80c"
+utsa_combined = "#D04D92"
+font_colour = 'black' 
+# Combined, CV, BTL
+colours = [[230, 159,0], [86, 180, 233], [0, 158, 115]]#[utsa_combined, utsa_orange, utsa_blue]
+colours = np.divide(colours, 255)
+font_size = 20
+axis_font_size = 18
+text_font_size = 16
+
+plt.rcParams['text.antialiased'] = True
+#plt.rcParams['font.family'] = font.get_name()
+# 0 is no compression = max quality/max size, 9 is max compression = low quality/min size
+plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
+plt.rcParams['pdf.fonttype'] = 42
+
+
+home = path.join("~")
+paths = dict(
+    data=path.join(home, "work", "feature-rating", "data"),
+    figures="/work/qlm573/feature-rating/figures/"
+    #figures=path.join(home, "work", "feature-rating", "figures")
+    )
+data = pd.read_csv(path.join(paths['data'], 'btl-cv-data.csv'))
+data = ABC_aligned(data)
+data = cv_btl_scale(data, replace=True)
+feature_labels = ["sym", "bor", "col", "pi_sym", "pi_bor", "pi_col"]
+predict_label = ["malignant"]
+data = data[["id"] + feature_labels + predict_label]
+
+# If you're dropping values, you don't need to impute.
+data = data.dropna(axis=0)
+
+y = data["malignant"]
+X = data[feature_labels]
+
+param_grid = {
+    "probability": [True],
+    "C": [1],# 10, 50, 100], #10, 50, 100], #[0.01, 0.1, 0.5, 1., 10, 100],
+    "kernel": ["rbf"] #,  "poly", "linear"]}
+    # "gamma": [0.75, 0.5, 0.25], #[1, 0.75, 0.5, 0.25, 0.1, 0.01, 0.001],
+}
+
+def print_score(model, X_train, y_train, X_test, y_test, train=True):
+    # compare train and test for over/underfitting
+    if train:
+        pred = model.predict(X_train)
+        report = pd.DataFrame(classification_report(y_train, pred, output_dict=True))
+        print(f"Training Result:\nAccuracy:{accuracy_score(y_train, pred) *100:.2f}\nClassification Report:\n{report}\nConfusion Matrix:\n{confusion_matrix(y_train, pred)}\n")
+    else:
+        pred = model.predict(X_test)
+        report = pd.DataFrame(classification_report(y_test, pred, output_dict=True))
+        cm = confusion_matrix(y_test, pred)
+        TP = cm[0,1]
+        TN = cm[1,1]
+        FP = cm[0,1] #Type 1 error
+        FN = cm[1,0] #Type 2 error
+        classification_accuracy = (TP + TN) / float(TP + TN +FP + FN)
+        print("==========================================\n")
+        print(f"Test Result:\nAccuracy:{accuracy_score(y_test, pred) *100:.2f}\n")
+        print("------------------------------------------\n")
+        print(f"Classification Accuracy: {classification_accuracy: .2f}")
+        print(f"Classification Report:\n{report}\n")
+        print("------------------------------------------\n")
+        print(f"Confusions:\nTP: {TP}\nTN: {TN}\nFP: {FP}\nFN: {FN}\n")
+
+
+def test_model(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=42)
+    model.fit(X_train, y_train)
+    # print_score(model, X_train, y_train, X_test, y_test, train=True)
+    print_score(model, X_train, y_train, X_test, y_test, train=False)
+
+
+def feature_comparison(data, feature_labels):
+    X = data[feature_labels[:3]]
+    print(f"Features: {feature_labels[:3]}")
+    test_model(X, y)
+
+    X = data[feature_labels[3:]]
+    print(f"Features: {feature_labels[3:]}")
+    test_model(X, y)
+
+    X = data[feature_labels]
+    print(f"Features: {feature_labels}")
+    test_model(X, y)
+
+
+def best_parms(model, X_train, y_train, param_grid, refit=True, verbose=1, cv=5):
+    grid = GridSearchCV(model, param_grid, refit=refit, verbose=verbose, cv=cv, n_jobs=-1)
+    grid.fit(X_train, y_train)
+    best_parms = grid.best_params_
+    print(best_parms)
+    return best_parms
+
+
+def fit_best(parms, X_train, y_train): #, X_test, y_test):
+    model = SVC(**parms)
+    model.fit(X_train, y_train)
+    # print_score(model, X_train, y_train, X_test, y_test, train=False)
+    null_accuracy = y.value_counts()[0] / y.value_counts().sum()
+    print(null_accuracy)
+    cross_val_roc = cross_val_score(model, X_train, y_train, cv=5, scoring='roc_auc').mean()
+    print(f"Cross-validation ROC-AUC: {cross_val_roc:.2f}")
+    return model
+
+
+def feature_comparison_AUC(param_grid, data, feature_labels):
+    print("================== All features ==================")
+    X = data[feature_labels].copy()
+    scaler = StandardScaler().fit(X)
+    X = scaler.transform(X)
+    parms = best_parms(SVC(), X, y, param_grid)
+    model_all = fit_best(parms, X, y)
+
+    print("================== CV features ==================")
+    X_CV = data[feature_labels[:3]].copy()
+    scaler = StandardScaler().fit(X_CV)
+    X_CV = scaler.transform(X_CV)
+    parms = best_parms(SVC(), X_CV, y, param_grid)
+    model_cv = fit_best(parms, X_CV, y)
+
+    print("================== BTL features ==================")
+    X_BTL = data[feature_labels[3:]].copy()
+    scaler = StandardScaler().fit(X_BTL)
+    X_BTL= scaler.transform(X_BTL)
+    parms = best_parms(SVC(), X_BTL, y, param_grid)
+    model_btl = fit_best(parms, X_BTL, y)
+
+    return [(model_all,(X, y)),
+            (model_cv, (X_CV, y)),
+            (model_btl,(X_BTL, y))
+            ]
+
+
+
+
+
+def plot_training_data_with_decision_boundary(clf, X, y, model_label):
+    # Train the SVC
+    #clf = svm.SVC(kernel=kernel, gamma=2).fit(X, y) # kernel was an argument in the function, but you only use rbf.
+
+    # Settings for plotting
+    fig, ax = plt.subplots(figsize=(4, 3))
+    x_min, x_max, y_min, y_max = -3, 3, -3, 3
+    ax.set(xlim=(x_min, x_max), ylim=(y_min, y_max))
+
+    # Plot decision boundary and margins
+    common_params = {"estimator": clf, "X": X, "ax": ax}
+    DecisionBoundaryDisplay.from_estimator(
+        **common_params,
+        response_method="predict",
+        plot_method="pcolormesh",
+        alpha=0.3,
+    )
+    DecisionBoundaryDisplay.from_estimator(
+        **common_params,
+        response_method="decision_function",
+        plot_method="contour",
+        levels=[-1, 0, 1],
+        colors=["k", "k", "k"],
+        linestyles=["--", "-", "--"],
+    )
+
+    # Plot bigger circles around samples that serve as support vectors
+    ax.scatter(
+        clf.support_vectors_[:, 0],
+        clf.support_vectors_[:, 1],
+        s=250,
+        facecolors="none",
+        edgecolors="k",
+    )
+    # Plot samples by color and add legend
+    ax.scatter(X[:, 0], X[:, 1], c=y, s=150, edgecolors="k")
+    ax.legend(*scatter.legend_elements(), loc="upper right", title="Classes")
+    ax.set_title(f"{model_label} Decision boundaries")
+
+    return fig
+
+
+
+
+
+def roc_auc(models, plot_labels, include_effnet=False):
+    features = ["CV_A", "CV_B", "CV_C", "A", "B", "C"]
+    counter = 0
+    roc_fig, roc_ax = plt.subplots(1,1,figsize=(6,6))
+    for model, data in models:
+        label = plot_labels[counter]
+        if label == "CV + BTL":
+            f_labels = np.array(features)
+        elif label == "CV":
+            f_labels = np.array(features[:3])
+        else:
+            f_labels = np.array(features[3:])
+
+        X, y = data
+        model.fit(X, y)
+
+        fv_fig, fv_ax = plt.subplots(1,1,figsize=(6,6))
+        perm_importance = permutation_importance(model, X, y)
+        sorted_idx = perm_importance.importances_mean.argsort()
+        fv_ax.barh(f_labels[sorted_idx], perm_importance.importances_mean[sorted_idx], color=utsa_orange, edgecolor=font_colour, linewidth=2, height=0.9)
+        fv_ax.set_xlabel("Accuracy Loss", color=font_colour, fontsize=axis_font_size)
+        fv_ax.set_xlim(left=0, right=0.2)
+        fv_ax.set_xticks([0, 0.05, 0.1, 0.15, 0.2])
+        fv_ax.tick_params(axis='both', labelsize=axis_font_size)
+        # fv_ax.set_yticks(fontsize=font_size)
+        fv_ax.spines['top'].set_visible(False)
+        fv_ax.spines['right'].set_visible(False)
+        fv_fig.savefig(f"feature-values-{label}.pdf", format='pdf', dpi=600, bbox_inches='tight')
+
+        y_scores = model.predict_proba(X)[:,1]
+        fpr, tpr, thresholds = roc_curve(y, y_scores)
+        roc_auc = auc(fpr,tpr)
+
+        roc_ax.plot(fpr, tpr, linewidth=3, label=f'{label}: {roc_auc:.2f}', c=colours[counter])
+ 
+        # plot decision boundary
+        #decision_boundary_fig = plot_training_data_with_decision_boundary(model, X, y, label)
+        #decision_boundary_fig.savefig(f"decision_boundary_{label}.pdf", format='pdf', dpi=600, bbox_inches='tight')
+
+        counter += 1
+
+    if include_effnet:
+        data_effnet = pd.read_csv(path.join(paths['data'], 'best_EfficientNetB0-predictions.csv'))
+        fpr, tpr, _ = roc_curve(data_effnet['malignant'].to_numpy(), data_effnet['prediction'])
+        effnet_auc = auc(fpr, tpr)
+        roc_ax.plot(fpr, tpr, linewidth=3, label=f'EN: {effnet_auc:.2f}')
+
+    roc_ax.plot([0, 1], [0, 1], 'k--', linewidth=2)#, label='Random')
+    #roc_ax.set_title('SVM Categorisation Comparison',color=font_colour, fontsize=font_size) 
+    roc_ax.set_xlabel('False Positive Rate',color=font_colour, fontsize=axis_font_size)
+    roc_ax.set_ylabel('True Positive Rate',color=font_colour, fontsize=axis_font_size)
+    roc_ax.spines['top'].set_visible(False)
+    roc_ax.spines['right'].set_visible(False)
+    roc_ax.legend(loc='lower right', title="ROC", fontsize=text_font_size, title_fontsize=axis_font_size)
+    roc_fig.savefig(path.join(paths["figures"], 'SVM_ROC.pdf'),format='pdf',dpi=600, bbox_inches='tight')
+    roc_fig.savefig(path.join(paths["figures"], 'SVM_ROC.png'),format='png',dpi=600, bbox_inches='tight')
+
+
+
+
+models = feature_comparison_AUC(param_grid, data, feature_labels)
+
+roc_auc(models, ["CV + BTL", "CV", "BTL"], include_effnet=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

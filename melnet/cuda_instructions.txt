@@ -1,0 +1,18 @@
+cuda_instructions
+python version > 3.9
+conda create -n melnet_env python=3.9
+conda activate melnet_env
+conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+python -m pip install "tensorflow<2.11"
+conda install pandas matplotlib scikit-learn
+pip uninstall numpy
+pip install numpy==1.26.4
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+
+# To fix a serilaisation error specific to the versions you're using, you went into /mnt/c/Users/bennett.1755/.conda/envs/melnet_env/Lib/site-packages/keras/applications/efficientnet.py and changed a line at MSB EDIT -- see https://github.com/keras-team/tf-keras/issues/383
+EDIT this:
+x = layers.Rescaling(1.0 / tf.math.sqrt(IMAGENET_STDDEV_RGB))(x)
+TO:
+x = layers.Rescaling(
+    [1.0 / math.sqrt(stddev) for stddev in IMAGENET_STDDEV_RGB]
+)(x)
