@@ -2,10 +2,12 @@ from pathlib import Path
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
+from ..config import (PATHS, FILES)
+
 def main(feature, save_data):
-    home = Path(__file__).resolve().parent.parent
-    data_path = home / "data" / "cleaned"
-    estimates = home / "data" / "estimates"
+
+    data_path = PATHS['clean_data']
+    estimates = PATHS['estimates']
     if feature is not None:
         for f in feature: 
             if f == "symmetry":

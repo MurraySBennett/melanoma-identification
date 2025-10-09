@@ -7,10 +7,12 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from time import perf_counter
 
+from ...config import (FILES, PATHS)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
-file_handler = logging.FileHandler(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_shape.txt"))
+file_handler = logging.FileHandler(FILES['cv_shape'])
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 stream_handler = logging.StreamHandler()
@@ -166,16 +168,8 @@ def get_contour(mask):
 def main():
     batch_size = (os.cpu_count()-1) * 2**6
     n_images = None
-    home_path = os.path.join(os.path.expanduser('~'), 'win_home', 'melanoma-identification')
 
-    paths = dict(
-        home=home_path,
-        images=os.path.join(home_path, "images", "resized"),
-        masks=os.path.join(home_path, "images", "segmented", "masks"),
-        segmented=os.path.join(home_path, "images", "segmented", "images"),
-        data=os.path.join(home_path, "images", "metadata")
-        )
-    mask_paths = glob.glob(os.path.join(paths['masks'], '*.png'))
+    mask_paths = glob.glob(os.path.join(PATHS['masks'], '*.png'))
     mask_paths = sorted(mask_paths)
 
     if n_images is not None:

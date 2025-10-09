@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import numpy as np
 
+from ..config import (PATHS, FILES)
+
 # font = FontProperties(fname="Garamond BoldCondensed.ttf")
 font = FontProperties()
 FONT_COLOUR = "black" #/"#0c2340" # the hex code for contour_colour
@@ -16,11 +18,10 @@ plt.rcParams['font.family'] = font.get_name()
 plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
 plt.rcParams['pdf.fonttype'] = 42
 
-home        = Path(__file__).resolve().parent.parent 
-data_path   = home / "data" / "estimates" / "btl_cv_data.csv"
+data_path   = FILES['btl_cv']
 
-img_path    = home.parent / "images" / "resized"
-fig_path    = home / "figures"
+img_path    = PATHS['images']
+fig_path    = PATHS['figures']
 data = pd.read_csv(data_path)
 
 features    = ['pi_sym', 'pi_bor', 'pi_col']

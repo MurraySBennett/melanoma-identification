@@ -2,8 +2,8 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
-from file_management import save_img, set_logger
-from minimise_dca import *
+from .file_management import save_img, set_logger
+from .minimise_dca import *
 
 
 def process_img(img, n_clusters=6, segment='otsu', save_img_label=None):

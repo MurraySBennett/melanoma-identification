@@ -15,7 +15,8 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (FILES, PATHS)
 
 def main(bootstrapping=False, test_random=False, test_between=False):
     x, y = get_data()
@@ -98,14 +99,11 @@ def main(bootstrapping=False, test_random=False, test_between=False):
     pprint(aucs)
 
 
-home = Path(__file__).resolve().parent.parent
 config = {
     "paths": {
-        "scripts": home / "scripts",
-        "data": home / "data" / "estimates" / "btl_cv_data.csv",
-        "figures": home / "figures",
-        "effnet": home.parent / "melnet" / "data",
-        "models": home / "models"
+        "data": FILES['btl_cv'],
+        "figures": PATHS['figures'],
+        "models": PATHS['svm_models']
     },
     "plotting": {
         "UTSA_BLUE": "#0c2340",

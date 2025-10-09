@@ -12,11 +12,11 @@ import pandas as pd
 from pprint import pprint
 from joblib import Parallel, delayed
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (PATHS, FILES)
 
 ADD_LR = True
 
-home = Path(__file__).resolve().parent.parent
 paths = {
     "data": home / "data" / "estimates" / "btl_cv_data.csv",
     "figures": home / "figures",

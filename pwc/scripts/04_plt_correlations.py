@@ -6,7 +6,8 @@ from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.impute import SimpleImputer
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (FILES, PATHS)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,13 +24,8 @@ plt.rcParams['font.family'] = font.get_name()
 plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
 plt.rcParams['pdf.fonttype'] = 42
 
-home = Path(__file__).resolve().parent.parent
-paths = dict(
-    figures = home / "figures",
-    data = home / "data" / "estimates" / "btl_cv_data.csv",
-)
 
-data = pd.read_csv(paths["data"])
+data = pd.read_csv(PATHS["btl_cv"])
 data = abc_aligned(data)
 data = cv_btl_scale(data, replace=True)
 data = data[["id", "malignant", "pi_sym", "pi_bor", "pi_col", "sym", "bor", "col"]]
@@ -182,7 +178,7 @@ if SHOW_FIG:
 
 
     plt.savefig(
-        paths['figures'] / "btl_cv_cor.pdf",
+        PATHS['figures'] / "btl_cv_cor.pdf",
         format='pdf', dpi=600, bbox_inches='tight'
     )
 
@@ -207,7 +203,7 @@ if SHOW_FIG:
     plt.tight_layout()
 
     plt.savefig(
-        paths["figures"] / "btl_cv_cor_mat.pdf",
+        PATHS["figures"] / "btl_cv_cor_mat.pdf",
         format="pdf", dpi=600, bbox_inches="tight"
     )
     plt.show()

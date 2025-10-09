@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import json
 from pprint import pprint as pp
 
-from descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
+from ..config import (PATHS, FILES)
+from .descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
 # from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr, shape_dist
 
 global participant_conditions, pilot_data, sona_ids
@@ -22,13 +23,7 @@ subject = 1
 def main():
     save_data   = True
     n_files     = None
-    here        = Path(__file__).resolve().parent 
-    home_path   = Path(__file__).resolve().parent.parent
-    paths = dict(
-        data = home_path / "data" / "raw",
-        btl_data = home_path / "data" / "cleaned"
-        )
-    files = list(paths["data"].glob("*elanoma*.csv"))
+    files = list(PATHS["raw_data"].glob("*elanoma*.csv"))
     if n_files is not None:
         files = files[:n_files]
     data = read_all(files)
@@ -66,19 +61,19 @@ def main():
     save_data = False
     if save_data:
         data.to_csv(
-            paths["btl_data"] / "data-processed.csv",
+            paths["clean_data"] / "data_processed.csv",
             index=False
         ) # processed == reverse scored
         asymmetry.to_csv(
-            paths["btl_data"] / "btl-asymmetry.csv",
+            paths["clean_data"] / "btl_asymmetry.csv",
             index=False
         )
         border.to_csv(
-            paths["btl_data"] / "btl-border.csv",
+            paths["clean_data"] / "btl_border.csv",
             index=False
         )
         colour.to_csv(
-            paths["btl_data"] / "btl-colour.csv",
+            paths["clean_data"] / "btl_colour.csv",
             index=False
         )
 

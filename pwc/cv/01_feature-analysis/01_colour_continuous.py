@@ -9,10 +9,12 @@ import concurrent.futures
 
 import matplotlib.pyplot as plt
 
+from ...config import (PATHS, FILES)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
-file_handler = logging.FileHandler(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cv_colour.txt"))
+file_handler = logging.FileHandler(FILES['cv_colour'])
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 stream_handler = logging.StreamHandler()
@@ -103,22 +105,14 @@ def get_lesion(img_path, mask_path):
         print(f"Error processing {label}: {e}")
         return [None, label]
 
-home_path = path.join(path.expanduser('~'), 'win_home', 'melanoma-identification')
 batch_size = (os.cpu_count()-1) * 2**6
 n_images = None
 
-paths = dict(
-    home=home_path,
-    images=path.join(home_path, "images", "resized"),
-    masks=path.join(home_path, "images", "segmented", "masks"),
-    segmented=path.join(home_path, "images", "segmented", "images"),
-    data=path.join(home_path, "images", "metadata")
-    )
-image_paths = glob.glob(path.join(paths['images'], '*.JPG'))
+image_paths = glob.glob(path.join(PATHS['images'], '*.JPG'))
 image_paths = sorted(image_paths)
 if n_images is not None:
     image_paths = image_paths[:n_images]
-mask_paths = glob.glob(path.join(paths['masks'], '*.png'))
+mask_paths = glob.glob(path.join(PATHS['masks'], '*.png'))
 mask_paths = sorted(mask_paths)
 
 
@@ -140,45 +134,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# for i in range(0, len(image_paths), batch_size):
-#     img_id = image_paths[i].split('/')[-1]
-#     mask_id = mask_paths[i]
-
-#     img = cv.imread(image_paths[i])
-#     img_lab = cv.cvtColor(img, cv.COLOR_BGR2Lab)
-#     mask = cv.imread(mask_paths[i], -1)
-
-#     masked = cv.bitwise_and(img, img, mask=mask.astype(np.uint8))
-#     masked_lab = cv.bitwise_and(img_lab, img_lab, mask=mask.astype(np.uint8))
-
-#     masked = combine_imgmask(image_paths[i], mask_paths[i])
-#     # img = combine_imgmask(image_paths[i], mask_paths[i])
-#     # mask_target = np.any(mask != [0, 0, 0], axis=-1)
-#     mask_target = np.all(mask != [0, 0, 0], axis=-1)
-#     lesion = img[mask_target]
-#     lesion_lab = img_lab[mask_target]
-
-#     # hists = get_hist(lesion)
-#     # plot_colour_hist(hists)
-
-#     # root mean square
-#     rms_LAB = rms_colour(lesion_lab)
-#     rms_RGB = rms_colour(lesion)
-
-#     # coefficient of variation (sd/mu)
-#     LAB_coeff = get_coeff_var(lesion_lab)
-#     RGB_coeff = get_coeff_var(lesion)
-
-#     # moments
-#     # LAB_moments = moments(lesion_lab, 0)
-#     # RGB_moments = moments(lesion, 0)
-#     # LAB_moments = moments(lesion_lab, 1)
-#     # RGB_moments = moments(lesion, 1)
-#     # LAB_moments = moments(lesion_lab, 2)
-#     # RGB_moments = moments(lesion, 2)
-
-#     # print(rms_LAB, rms_RGB)
-#     # show(masked, img_id)
-
 

@@ -13,7 +13,8 @@ from sklearn.preprocessing import StandardScaler
 from pprint import pprint
 import pandas as pd
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (PATHS, FILES)
 
 # gamma:
 # 'scale' (default): 1/ (n_features * X.var())
@@ -50,11 +51,9 @@ def main():
 home = Path(__file__).resolve().parent.parent
 config = {
     "paths": {
-        "scripts": home / "scripts",
-        "data": home / "data" / "estimates" / "btl_cv_data.csv",
-        "figures": home / "figures",
-        "effnet": home.parent / "melnet" / "data",
-        "models": home / "models"
+        "data": FILES['btl_cv'],
+        "figures": PATHS['figures'],
+        "models": PATHS['svm_models']
     },
     "feature_labels": ["sym", "bor", "col", "pi_sym", "pi_bor", "pi_col"],
     "predict_label": ["malignant"]

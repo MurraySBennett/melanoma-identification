@@ -18,7 +18,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFECV
 from sklearn.svm import SVC
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (FILES, PATHS)
 
 
 def main(incl_log=False):
@@ -70,14 +71,12 @@ def main(incl_log=False):
     # plot_roc_auc(models, y, ["All", "CV", "BTL"], logreg=logreg)
 
 
-home = Path(__file__).resolve().parent.parent
 config = {
     "paths": {
-        "scripts": home / "scripts",
-        "data": home / "data" / "estimates" / "btl_cv_data.csv",
-        "figures": home / "figures",
-        "effnet": home.parent / "melnet" / "data",
-        "models": home / "models"
+        "data": FILES['btl_cv'],
+        "figures": PATHS['figures'],
+        # "effnet": home.parent / "melnet" / "data",
+        "models": PATHS['svm_models']
     },
     "plotting": {
         "UTSA_BLUE": "#0c2340",

@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-home        = Path(__file__).resolve().parent.parent
-data_path   = home / "data" / "estimates" / "btl_cv_data.csv"
-img_path    = home.parent / "images" / "resized"
-figure_path = home / "figures"
+from ..config import (FILES, PATHS)
+
+data_path   = FILES['btl_cv']
+img_path    = PATHS['images']
+figure_path = PATHS['figures']
 data = pd.read_csv(data_path)
 
 features = ['pi_sym', 'pi_bor', 'pi_col']

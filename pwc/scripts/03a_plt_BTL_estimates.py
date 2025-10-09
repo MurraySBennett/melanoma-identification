@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+from ..config import (FILES, PATHS)
+
 
 # font = FontProperties(fname="Garamond BoldCondensed.ttf")
 font = FontProperties()
@@ -16,10 +18,8 @@ plt.rcParams['font.family'] = font.get_name()
 plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
 plt.rcParams['pdf.fonttype'] = 42
 
-home        = Path(__file__).resolve().parent.parent 
-data_path   = home / "data" / "estimates" / "btl_cv_data.csv"
-
-fig_path    = home / "figures"
+data_path   = FILES['btl_cv']
+fig_path    = PATHS['figures']
 data = pd.read_csv(data_path)
 
 features    = ['pi_sym', 'pi_bor', 'pi_col']
