@@ -58,7 +58,7 @@ N_IMAGES = None # None = use all
 # model accuracy saving thresholds
 acc_thresholds = np.arange(0.55, 0.91, 0.05)
 loss_threshold = 0.7
-tolerance = 0.025
+tolerance = 0.02
 
 
 # Set Paths, read Data
