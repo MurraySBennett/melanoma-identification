@@ -34,9 +34,10 @@ source .mel_venv/bin/activate
 
 ```
 
-Finally, install requirements, the appropriate file is located within the 'pwc' directory, so can be called from within that directory.
+Finally, install requirements, the appropriate file is located within the 'pwc' directory, so move into that directory and call pip install.
 
 ```
+export PYTHONPATH=$PWD
 cd pwc
 pip install -r requirements.txt
 cd ..
