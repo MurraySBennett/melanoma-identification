@@ -34,8 +34,8 @@ os.environ['PYTHONHASHSEED']=str(seed_value)
 random.seed(seed_value)
 np.random.seed(seed_value)
 tf.random.set_seed(seed_value)
-os.environ['TF_DETERMINISTIC_OPS'] = '1'
-os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+# os.environ['TF_DETERMINISTIC_OPS'] = '1'
+# os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
 
 
 # %% Hyper parameters
@@ -47,17 +47,17 @@ img_sizes  = dict(
 )
 # IMG_SIZE   = img_sizes[model_name]
 IMG_SIZE   = 224
-BATCH_SIZE = 256#128
-LR         = 1e-6#5
+BATCH_SIZE = 128
+LR         = 1e-7# 1e-5
 
-EPOCHS     = 100
-patience   = 40
+EPOCHS     = 400
+PATIENCE   = 40
 
 N_IMAGES = None # None = use all
 
 # model accuracy saving thresholds
 acc_thresholds = np.arange(0.55, 0.91, 0.05)
-loss_threshold = 0.7
+loss_threshold = 1.0 # 0.7
 tolerance = 0.02
 
 
@@ -249,13 +249,13 @@ class SaveModelAtThresholds(Callback):
 reduce_lr = ReduceLROnPlateau(
     monitor='val_loss',
     factor=0.1,
-    patience=patience//10,
+    patience=PATIENCE//10,
     min_lr=1e-6
 )
 # early_stopping has no effect when running the EPOCH loop the way I am
 early_stopping = EarlyStopping(
     monitor='val_loss',
-    patience=patience,
+    patience=PATIENCE,
     restore_best_weights=True
 )
 
