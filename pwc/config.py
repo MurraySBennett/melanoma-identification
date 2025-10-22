@@ -22,26 +22,26 @@ PATHS = dict(
 FILES = dict(
     metadata=HOME_PATH / "images" / "ISIC-database" / "metadata.csv",
     malignant_ids = PATHS['cv'] / "01_feature-analysis" / "malignant_ids.txt",
-    cv_shape=PATHS['cv'] / "01_feature-analysis" / f"cv_shape{'_reproduced' if REPRODUCE else ''}.txt",
-    cv_colour=PATHS['cv'] / "01_feature-analysis" / f"cv_colour{'_reproduced' if REPRODUCE else ''}.txt",
+    cv_shape=PATHS['cv'] / "01_feature-analysis" / f"cv_shape.txt",
+    cv_colour=PATHS['cv'] / "01_feature-analysis" / f"cv_colour.txt",
     cv_data=PATHS['estimates'] / "cv-data.csv",
     btl_data=PATHS['estimates'] / "btl_data.csv",
     btl_cv = PATHS['estimates'] / "btl_cv_data.csv"
 )
 
 
-for key in ['masks', 'segmented', 'estimates', 'raw_data', 'clean_data', 'figures', 'svm_models']:
-    path = PATHS[key]
+for req_directory_paths in ['masks', 'segmented', 'estimates', 'raw_data', 'clean_data', 'figures', 'svm_models']:
+    path = PATHS[req_directory_paths]
     try:
         path.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         print(f"Error creating {path.name}: {e}")
     
-for key in ['metadata', 'malignant_ids']:
-    file = FILES[key]
+for req_file_paths in ['metadata', 'malignant_ids']:
+    file = FILES[req_file_paths]
     if not file.exists():
-        print(f"I can't find the metadata file: {file}. This is an unhelpful message, but we will need it.")
+        print(f"I can't find the metadata file: {file}. This is an unhelpful message, but we will need it. [1] Check that you have the file somewhere, or [2] check that it's in the correct location, otherwise [3] contact Murray and disparage him for this oversight.")
 
 if not PATHS['images'].is_dir():
-    print(f"I can't find the images directory: {PATHS['images']}. We definitely need it.")
+    print(f"I can't find the images directory: {PATHS['images']}. You will definitely need that one. Are you in the correct directory? If yes and it still fails, contact Murray.")
 
