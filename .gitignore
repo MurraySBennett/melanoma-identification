@@ -27,10 +27,12 @@ pwc_venv/
 *.zip
 *.png
 *.gif
+*.svg
 
 # but DO include the final 10,000 reshaped images
 !images/
 !images/**
+images/masks/*.png
 
 *.Rproj*
 *.Rhistory
