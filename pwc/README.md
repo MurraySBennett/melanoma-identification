@@ -20,26 +20,25 @@ Create and activate your python virtual environment however you like to do it. O
 
 ```
 cd melanoma-identification
-python -m venv mel_venv
+python -m venv pwc_venv
 
-# then, depending on your system, activate it
+# activate the virtual environment depending on your system:
 # mac/Linux
-source .mel_venv/bin/activate
+source pwc_venv/bin/activate
 
 # PowerShell
-.mel_venv\Scripts\Activate.ps1
+pwc_venv\Scripts\Activate.ps1
 
 # CommandPrompt
-.mel_venv\Scripts\activate.bat
+pwc_venv\Scripts\activate.bat
 
 ```
 
 Finally, install requirements, the appropriate file is located within the 'pwc' directory, so move into that directory and call pip install.
 
 ```
-export PYTHONPATH=$PWD
 cd pwc
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 cd ..
 ```
 
@@ -75,7 +74,7 @@ python -m pwc.cv.01_feature-analysis.02_merge_cv_data
 At this point, we then head out to collect our data using a pairwise choice experiment (hence the 'pwc' you are seeing in the directory names). The experiment file can be reviewed and run by uploading the `melanoma-identification/pwc/btl_melanoma.study.json` file to
 [lab.js](https://labjs.felixhenninger.com/).
 
-We hosted our images online to allow rapid online data collection, but have since paused this hosting mechanism. You can still run the task locally, but will need to alter the `img_root` and `practice_root` path variables in the 2nd custom script window of the 'Welcome' screen to point to the image location (assuming you're working in the lab.js builder, you may need to scroll down).
+We hosted our images online to allow rapid online data collection, but have since paused this hosting mechanism. You can still run the task locally, but will need to alter the `img_root` and `practice_root` path variables in the _2nd custom script window_ of the **Welcome** screen to point to the image location (assuming you're working in the lab.js builder, you may need to scroll down).
 
 Following data collection, we saved the raw data to `melanoma-identification/pwc/data/raw/`. We will now work through the scripts that cleaned and processed this data to generate a set of more managable master files for analysis `melanoma-identification/pwc/data/cleaned/[btl-asymmetry][btl-border][btl-colour].csv`:
 
@@ -131,13 +130,13 @@ We now assess the diagnostic utility of the human perception and computer vision
 The complete process involves three scripts.
 The first two scripts determine model configurations and run permutation tests to assess significant differences between the model predictions. If you're willing to take our word for it (particularly in terms of the 'different from random performance', which takes the longest, then skip to the third script: 05c_svm_plot.py.
 
-We start by performing a grid search on the regularisation parameter, $C$, and the radial basis function's kernel coefficient, $\gamma$, for each of the models. We save the grid search outputs for a visual inspection and determination of the best configuration across all models.
+We start by performing a grid search on the regularisation parameter, $C$, and the radial basis function's kernel coefficient, $\gamma$, for each of the models. We save the grid search outputs for a visual inspection and determination of the best configuration across all models, which it then saves. Be warned that this script is a slow running beast. Hit play then grab a cup of tea.
 
 ```
 python -m pwc.scripts.05a_svm_parameter_search
 ```
 
-We then load the model configurations, train each model, and conduct permuation tests to compare performance against chance and performance between models. Navigate to the end of the script to toggle the exectuion of each test. The randomness test (`test_random`) takes a while to run, but the more interesting _between_ model test is rather fast (`test_between`).
+We then load the model configurations, train each model, and conduct permuation tests to compare performance performance between models. _bootstrapping_ is set to ~true~ initially and is required to be run at least once. However, it can be toggled to False after you execute it once to help save time down the line. We also default the _between_ model test to run when you call the script as it is most interesting and rather fast. You are of course welcome to navigate to the end of the script before running it to include the exectuion of the model vs. randomness test (`test_random`; this one also takes a while to run and we doubt that it will tell you anything different to what your keen eye for significant differences has already suggested to you).
 
 ```
 python -m pwc.scripts.05b_svm_tests

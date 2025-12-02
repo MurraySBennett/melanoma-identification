@@ -9,13 +9,13 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
+# import statsmodels.api as sm
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import  roc_curve, auc, accuracy_score, roc_auc_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.feature_selection import RFECV
+# from sklearn.feature_selection import RFECV
 from sklearn.svm import SVC
 
 from .cv_transforms import abc_aligned, cv_btl_scale
@@ -202,9 +202,9 @@ def plot_roc_auc(model_tprs, incl_effnet=False, logreg=None):
     if logreg is not None:
         save_label += "_LR"
 
-    pdf_label = f"{save_label}.pdf"
+    pdf_label = f"{save_label}.svg"
     png_label = f"{save_label}.png"
-    roc_fig.savefig(config["paths"]["figures"] / pdf_label, bbox_inches='tight')
+    roc_fig.savefig(config["paths"]["figures"] / pdf_label, format='svg', bbox_inches='tight')
     roc_fig.savefig(config["paths"]["figures"] / png_label, bbox_inches='tight', dpi=600)
 
 
@@ -237,10 +237,10 @@ def stepwise_lr(x, y):
         # e.g., if sym = 1.5, then a +1 in symmetry increases the odds of malignancy by 1.5
         print(f"Feature: {f}, Coefficient: {coef: .3f}, odds ratio: {np.exp(coef):.3f}")
 
-    x_train_const = sm.add_constant(x_train[selected_])
-    logit_model = sm.Logit(y_train, x_train_const)
-    result = logit_model.fit()
-    print(result.summary())
+    # x_train_const = sm.add_constant(x_train[selected_])
+    # logit_model = sm.Logit(y_train, x_train_const)
+    # result = logit_model.fit()
+    # print(result.summary())
 
     return {'model': logreg, 'fpr': fpr, 'tpr': tpr, 'roc_auc':roc_auc}
 

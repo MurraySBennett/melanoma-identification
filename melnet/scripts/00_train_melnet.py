@@ -50,7 +50,7 @@ IMG_SIZE   = 224
 BATCH_SIZE = 128
 LR         = 1e-7# 1e-5
 
-EPOCHS     = 400
+EPOCHS     = 1_000
 PATIENCE   = 40
 
 N_IMAGES = None # None = use all
@@ -249,8 +249,8 @@ class SaveModelAtThresholds(Callback):
 reduce_lr = ReduceLROnPlateau(
     monitor='val_loss',
     factor=0.1,
-    patience=PATIENCE//10,
-    min_lr=1e-6
+    patience=PATIENCE//4,
+    min_lr=2e-7
 )
 # early_stopping has no effect when running the EPOCH loop the way I am
 early_stopping = EarlyStopping(
@@ -268,7 +268,7 @@ save_model_acc = SaveModelAtThresholds(
     accuracy_gap=0.1
 )
 
-callbacks = [save_model_acc]
+callbacks = [save_model_acc, reduce_lr, early_stopping]
 
 
 # %% Build model
@@ -424,7 +424,8 @@ def convert_to_numeric(metrics):
 
 
 def plot_saved_acc(ax, metrics, key):
-    saved_acc_values = metrics['saved_acc'][pd.notna(metrics['saved_acc'])].unique()
+    saved_acc_values = np.unique(metrics['saved_acc'].values[pd.notna(metrics['saved_acc'].values)])
+    saved_acc_values = [x[0] for x in saved_acc_values]
     for acc_val_num in saved_acc_values:
         filtered_metrics = metrics[metrics['saved_acc'] == acc_val_num]
         if not filtered_metrics.empty:
@@ -491,7 +492,7 @@ def evaluate_model(model, test_generator):
     y_pred_proba = model.predict(test_generator)
     y_pred = (y_pred_proba > 0.5).astype(int)
 
-    test_loss, test_accuracy, test_auc = model.evaluate(test_generator)    
+    test_loss, test_accuracy, test_auc = model.evaluate(test_generator)
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
     return {
         'loss': test_loss,

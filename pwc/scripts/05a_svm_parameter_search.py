@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.model_selection import  GridSearchCV, train_test_split
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
-from pprint import pprint
+# from pprint import pprint
 import pandas as pd
 
 from .cv_transforms import abc_aligned, cv_btl_scale
@@ -22,11 +22,20 @@ from ..config import (PATHS, FILES)
 # you might be theoretically better off using 'auto' or 'scale' to account for the 
 # different number of features used in each model.
 
+
+# if running grid search, otherwise, use the parameters you found. 
+# param_grid = {
+#     "kernel": ["rbf"],
+#     "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+#     "gamma": ["scale", "auto", 0.001, 0.01, 0.1]
+# }
+
 param_grid = {
     "kernel": ["rbf"],
-    "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
-    "gamma": ["scale", "auto", 0.001, 0.01, 0.1]
+    "C": [0.01],
+    "gamma": ["auto"]
 }
+
 
 def main():
     x, y = get_data()
@@ -45,7 +54,7 @@ def main():
     }
     parallel_results = Parallel(n_jobs=-1)(delayed(perform_grid_search)(name, features, y_train) for name, features in feature_sets.items())
     models = {name: best_estimator for name, best_estimator in parallel_results}
-    pprint(models)
+    # pprint(models)
 
 
 home = Path(__file__).resolve().parent.parent

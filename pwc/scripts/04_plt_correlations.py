@@ -25,7 +25,7 @@ plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
 plt.rcParams['pdf.fonttype'] = 42
 
 
-data = pd.read_csv(PATHS["btl_cv"])
+data = pd.read_csv(FILES["btl_cv"])
 data = abc_aligned(data)
 data = cv_btl_scale(data, replace=True)
 data = data[["id", "malignant", "pi_sym", "pi_bor", "pi_col", "sym", "bor", "col"]]

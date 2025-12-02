@@ -25,6 +25,8 @@ def main():
     # Use ThreadPoolExecutor to read images in batches
     with concurrent.futures.ThreadPoolExecutor() as io_executor:
         for i in range(0, len(image_paths), batch_size):
+            print(f"Working on images {i}:{i+batch_size} of {len(image_paths)}")
+
             start=perf_counter()
             batch_paths = image_paths[i:i+batch_size]
             batch_images = list(io_executor.map(read_img, batch_paths))
@@ -38,7 +40,7 @@ def main():
                 PATHS["masks"] / f"{p.stem}.png" for p in batch_paths
             ]
             io_executor.map(save_img, batch_masks, batch_mask_paths)
-            print(perf_counter()-start)
+            # print(perf_counter()-start)
 
 
 if __name__ == '__main__':

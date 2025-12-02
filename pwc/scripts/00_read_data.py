@@ -36,7 +36,7 @@ def main():
 
     if save_data:
         data.to_csv(
-            paths["data"] / "00_data-raw.csv",
+            PATHS["raw_data"] / "00_data-raw.csv",
             index = False
         )
 
@@ -61,19 +61,19 @@ def main():
     save_data = False
     if save_data:
         data.to_csv(
-            paths["clean_data"] / "data_processed.csv",
+            PATHS["clean_data"] / "data_processed.csv",
             index=False
         ) # processed == reverse scored
         asymmetry.to_csv(
-            paths["clean_data"] / "btl_asymmetry.csv",
+            PATHS["clean_data"] / "btl_asymmetry.csv",
             index=False
         )
         border.to_csv(
-            paths["clean_data"] / "btl_border.csv",
+            PATHS["clean_data"] / "btl_border.csv",
             index=False
         )
         colour.to_csv(
-            paths["clean_data"] / "btl_colour.csv",
+            PATHS["clean_data"] / "btl_colour.csv",
             index=False
         )
 
@@ -114,7 +114,8 @@ def process_data(file):
     try:
         df["pID"] = pID
         df["condition"] = condition
-        df["response"] = df["response"].replace({"nan": np.nan, "0": 0, "1": 1}).astype("Int64")
+        df["response"] = df["response"].replace({"nan": np.nan})
+        df["response"] = df["response"].map({"0": 0, "1": 1}, na_action='ignore').astype("Int64")
 
         df["winner"] = df["winner"].astype("str")
         df["loser"] = df["loser"].astype("str")

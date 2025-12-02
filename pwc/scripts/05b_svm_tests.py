@@ -48,6 +48,7 @@ def main(bootstrapping=False, test_random=False, test_between=False):
 
     for name, features in train_feature_sets.items():
         # best_params = None
+        # I have hard-coded these after visual inspection of the 05a_svm_parameter_search outputs
         model_params = {
             "kernel": "rbf",
             "C": 0.01,
@@ -324,7 +325,7 @@ def plot_param_scores(results, model_label):
 
 if __name__ == "__main__":
     main(
-        bootstrapping=False, # not necessary to run each time. Takes a bit of time, ~5-10 minutes.
+        bootstrapping=True, # necessary to run once, but then you should toggle it to False as it takes a bit of time, ~5-10 minutes.
         test_random=False, # this takes quite a while so run it once OR just take my scouts-honoured word that they're better than random.
         test_between=True # rapid and informative.
     )

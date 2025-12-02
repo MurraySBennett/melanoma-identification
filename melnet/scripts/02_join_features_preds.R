@@ -29,7 +29,7 @@
 {
   paths <- list(
     predictions = here("melnet", "data", "predictions", "all_model_predictions.csv"),
-    features = here("pwc", "data", "estimates", "btl_cv_data_revised.csv"),
+    features = here("pwc", "data", "estimates", "btl_cv_data.csv"),
     splits = here("melnet", "data", "image_splits.csv"),
     images = here("images", "resized"),
     figures = here("trust_calibration", "figures"),
@@ -41,7 +41,7 @@
   )
     
   data <- get_data(paths$predictions, paths$features, paths$splits)
-  
+    
   for (p in seq_along(paths$data)) {
     write.csv(data, here(paths$data[[p]], "features_predictions.csv"), row.names = FALSE)
   }

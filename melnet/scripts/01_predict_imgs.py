@@ -17,7 +17,7 @@ def main():
     weights_path = base_dir / 'melnet' / 'models'
     images_path = base_dir / 'images' / 'resized'
     data_path = base_dir / 'melnet' / 'data'
-    mal_path = base_dir / 'pwc' / 'data' / 'estimates' / 'btl_cv_data_revised.csv'
+    mal_path = base_dir / 'pwc' / 'data' / 'estimates' / 'btl_cv_data.csv'
     
     mal_data = pd.read_csv(mal_path)
     mal_data["id"] = [i.split(".")[0] for i in mal_data["id"]]
@@ -64,7 +64,10 @@ def main():
     print(f"Activations for best model saved to: {data_path / 'activations' / 'best_model_avg_pool_activations.csv'}")
 
     # rm last - it is presently the best model, anyway
-    weights = list(weights_path.glob("weights*.h5"))[:-1]
+    # weights = list(weights_path.glob("weights*.h5"))[:-1]
+    
+    # keeping it in there so we have the accuracy label for that model.
+    weights = list(weights_path.glob("weights*.h5"))
     for w in weights:
         fname_parts = w.name.split('_')
         if len(fname_parts) > 1:

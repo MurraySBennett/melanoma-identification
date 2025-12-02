@@ -3,6 +3,7 @@
 # raw data
 pwc/cv/*
 pwc/btl_sim/*
+pwc_venv/
 
 # grt/data/raw/*
 # grt/data/pilot*
@@ -76,3 +77,4 @@ pwc/btl_sim/*
 *.cls
 *.bst
 
+.Rproj.user

@@ -2,6 +2,7 @@ import os
 import glob
 import concurrent.futures
 import numpy as np
+import pandas as pd
 import logging
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -12,12 +13,14 @@ from ...config import (FILES, PATHS)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(message)s')
-file_handler = logging.FileHandler(FILES['cv_shape'])
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
+
+# file_handler = logging.FileHandler(FILES['cv_shape'], 'w') # overwrite/ new file on init
+# file_handler.setLevel(logging.INFO)
+# file_handler.setFormatter(formatter)
+
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+# logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 
@@ -143,20 +146,32 @@ def measure_shape(mask):
         x_sym, y_sym = get_asymmetry(mask, contour)
         compact_factor = get_shape_factor(contour)
         ap_ratio = AP_ratio(contour)
-        logger.info(f'{label}   {x_sym} {y_sym} {compact_factor}    {ap_ratio}')
-        shape_values = {'id':label, 'x_sym':x_sym, 'y_sym':y_sym, 'compact':compact_factor,'ap_ratio': ap_ratio}
+        # logger.info(f'{label},{x_sym},{y_sym},{compact_factor},{ap_ratio}')
+        # shape_values = {'id':label, 'x_sym':x_sym, 'y_sym':y_sym, 'compact':compact_factor,'ap_ratio': ap_ratio}
+        return {
+            'id': label, 
+            'x_sym': x_sym, 
+            'y_sym': y_sym, 
+            'compact': compact_factor, 
+            'ap_ratio': ap_ratio
+        }
     
-    except:
-        logger.info(f'{label},NA,NA,NA,NA')
-        shape_values = {'id':label, 'x_sym':np.nan, 'y_sym':np.nan, 'compact':np.nan,'ap_ratio': np.nan}
-    return shape_values 
+    except Exception as e:
+        logger.error(f'Failed to process {label}: {e}')
+        return {
+            'id': label, 
+            'x_sym': np.nan, 
+            'y_sym': np.nan, 
+            'compact': np.nan, 
+            'ap_ratio': np.nan
+        }
 
 
 def read_mask(path):
     mask = cv.imread(path, -1)
     thresh = 127
     mask  = cv.threshold(mask, thresh, 1, cv.THRESH_BINARY)[1]    
-    mask_id = path.split('/')[-1]
+    mask_id = os.path.basename(path)
     return [mask, mask_id] 
 
 
@@ -176,7 +191,8 @@ def main():
         mask_paths = mask_paths[:n_images]
         counter = 0
     
-    logger.info('id x_sym   y_sym   compact ap_ratio')
+    # logger.info('id,x_sym,y_sym,compact,ap_ratio')
+    all_features = []
 
     with concurrent.futures.ThreadPoolExecutor() as io_exec:
         for i in range(0, len(mask_paths), batch_size):
@@ -184,7 +200,13 @@ def main():
             batch_masks = list(io_exec.map(read_mask, batch_mask_paths))
             with concurrent.futures.ProcessPoolExecutor() as cpu_executor:
                 shape_features = list(cpu_executor.map(measure_shape, batch_masks))
-        # for i in range(0, len(batch_masks)):
+                all_features.extend(shape_features)
+
+    df = pd.DataFrame(all_features)
+    df = df[['id', 'x_sym', 'y_sym', 'compact', 'ap_ratio']]
+    df.to_csv( FILES['cv_shape'], sep=',', index=False, na_rep='NA')
+
+    # for i in range(0, len(batch_masks)):
     #     show(batch_masks, 'test_label')
     #     show(shape_features, 'test_alignment')
 
