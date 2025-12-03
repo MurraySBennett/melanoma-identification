@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from cv_transforms import abc_aligned, cv_btl_scale
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (FILES, PATHS)
 
-ADD_LR = True
+# ADD_LR = True
 
 home = Path(__file__).resolve().parent.parent 
 paths = {
@@ -34,7 +35,7 @@ def main():
     data = data.dropna(axis=0)
     
     models = feature_comparison_AUC(data, feature_labels)
-    roc_auc_plot(models, ["Both", "CV", "BTL"], rev)
+    roc_auc_plot(models, ["Both", "CV", "BTL"])
 
 
 def get_data():
@@ -100,7 +101,7 @@ def cross_val_roc_auc(x, y, kf):
     return mean_fpr, mean_tpr, aucs, mean_auc, std_auc, tprs_lower, tprs_upper
 
 
-def roc_auc_plot(models, plot_labels, revised):
+def roc_auc_plot(models, plot_labels):
     colours = [[230, 159, 0], [86, 180, 233], [0, 158, 115]]
     colours = np.divide(colours, 255)
     

@@ -127,10 +127,13 @@ We now assess the diagnostic utility of the human perception and computer vision
 2. Computer Vision
 3. BTL and Computer Vision
 
-The complete process involves three scripts.
-The first two scripts determine model configurations and run permutation tests to assess significant differences between the model predictions. If you're willing to take our word for it (particularly in terms of the 'different from random performance', which takes the longest, then skip to the third script: 05c_svm_plot.py.
+The complete process involves three scripts that first determine model configurations, run permutation tests, then plot a figure. One can skip this lengthy step and just run the rapid version that executes the known model configurations and generates the manuscript figure and results:
 
-We start by performing a grid search on the regularisation parameter, $C$, and the radial basis function's kernel coefficient, $\gamma$, for each of the models. We save the grid search outputs for a visual inspection and determination of the best configuration across all models, which it then saves. Be warned that this script is a slow running beast. Hit play then grab a cup of tea.
+```
+python -m pwc.scripts.05_SVM_5fold
+```
+
+For the full method, we start by performing a grid search on the regularisation parameter, $C$, and the radial basis function's kernel coefficient, $\gamma$, for each of the models. We save the grid search outputs for a visual inspection and determination of the best configuration across all models, which it then saves. Be warned that this script is a slow running beast. Hit play then grab a cup of tea.
 
 ```
 python -m pwc.scripts.05a_svm_parameter_search
@@ -142,7 +145,7 @@ We then load the model configurations, train each model, and conduct permuation 
 python -m pwc.scripts.05b_svm_tests
 ```
 
-Finally, let's plot the ROC curve. Shaded error is based on the variance across the 5-fold cross validation.
+Finally, we can use these outputs to plot an ROC curve. Shaded error is based on the variance derived via bootstrapping (note - this is a different method to the manuscript and generates slightly different _qualitative_ results)
 
 ```
 python -m pwc.scripts.05c_svm_plot
