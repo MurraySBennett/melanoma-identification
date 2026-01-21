@@ -1,209 +1,136 @@
 from pathlib import Path
-
+import matplotlib
+matplotlib.use("Pdf")  # Headless-safe backend for HPC
+import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
-from sklearn.impute import SimpleImputer
-
-from .cv_transforms import abc_aligned, cv_btl_scale
-from ..config import (FILES, PATHS)
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
-font = FontProperties()
+from .cv_transforms import abc_aligned, cv_btl_scale
+from ..config import (FILES, PATHS)
+
+# Global Publication Styling
+plt.rcParams.update({
+    'pdf.fonttype': 42, 
+    'ps.fonttype': 42,
+    'font.family': 'sans-serif', 
+    'font.sans-serif': ['Arial'],
+    'text.antialiased': True
+})
+
+# Formatting Constants
 FONT_COLOUR = "black"
 FONT_SIZE = 20
 AXIS_LABEL_FONT_SIZE = 18
 TEXT_FONT_SIZE = 16
-plt.rcParams['text.antialiased'] = True
-plt.rcParams['font.family'] = font.get_name()
-plt.rcParams['pdf.compression'] = 3 # (embed all fonts and images)
-plt.rcParams['pdf.fonttype'] = 42
-
-
-data = pd.read_csv(FILES["btl_cv"])
-data = abc_aligned(data)
-data = cv_btl_scale(data, replace=True)
-data = data[["id", "malignant", "pi_sym", "pi_bor", "pi_col", "sym", "bor", "col"]]
-
-features_btl = ["pi_sym", "pi_bor", "pi_col"]
-features_cv = ["sym", "bor", "col"]
-
-hm_data = data[features_btl + features_cv]
-cor_features = hm_data.corr(method='spearman')
-cor_mal = data[features_btl + features_cv + ["malignant"]].corr()
-# add Pearson column then Pearson row for malignancy
-cor_features['malignant'] = cor_mal['malignant']
-cor_features.loc['malignant'] = cor_mal['malignant']
-
-data["Diagnosis"] = data["malignant"].replace({0:"Benign", 1:"Malignant"})
-malignant = ["Diagnosis"]
-
+COLOUR_B = '#0c2340'  # Benign
+COLOUR_M = '#D4440D'  # Malignant
 
 def get_rho(x, y):
-    rho, p = spearmanr(x, y, nan_policy='omit')
-    return {'r': rho, 'p': p, 'rp': str(np.round(rho,3))+'\n'+str(np.round(p,3))}
+    """Calculates Spearman Rho and handles NaNs deterministically."""
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    if not np.any(mask):
+        return {'r': np.nan, 'p': np.nan}
+    rho, p = spearmanr(x[mask], y[mask])
+    return {'r': rho, 'p': p}
 
+def get_ls_data(x, y):
+    """Calculates Linear Regression line based on valid pairwise points."""
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    x_val = x[mask].reshape(-1, 1)
+    y_val = y[mask].reshape(-1, 1)
+    
+    if x_val.size == 0:
+        return None, None
+        
+    model = LinearRegression().fit(x_val, y_val)
+    # Create x-values for the line spanning the actual data range
+    x_range = np.linspace(x_val.min(), x_val.max(), 100).reshape(-1, 1)
+    y_pred = model.predict(x_range)
+    return x_range, y_pred
 
-def get_ls(x, y):
-    x = np.array(x).reshape(-1, 1)
-    y = np.array(y).reshape(-1, 1)
-    imputer = SimpleImputer(strategy='mean')
-    y = imputer.fit_transform(y)
+def main():
+    # 1. Data Preparation
+    data_raw = pd.read_csv(FILES["btl_cv"])
+    data = abc_aligned(data_raw)
+    data = cv_btl_scale(data, replace=True)
+    
+    features_btl = ["pi_sym", "pi_bor", "pi_col"]
+    features_cv = ["sym", "bor", "col"]
+    f_labels = ['Asymmetry', 'Border Irregularity', 'Colour Variance']
+    
+    # 2. Correlation Matrix Calculation
+    # We use Spearman for everything to remain consistent across features and malignancy
+    cor_cols = features_btl + features_cv + ["malignant"]
+    cor_features = data[cor_cols].corr(method='spearman')
 
-    model = LinearRegression()
-    model.fit(x, y)
-    slope = model.coef_[0][0]
-    intercept = model.intercept_[0]
-    pred = slope * x + intercept
-    return {"slope": slope, "intercept": intercept, "lsline": pred}
+    # 3. Figure 1: Triple Scatter Plot
+    PLT_SIZE = 5
+    fig, axes = plt.subplots(1, 3, figsize=(PLT_SIZE*3, PLT_SIZE))
+    
+    for i, label in enumerate(f_labels):
+        ax = axes[i]
+        x_data = data[features_cv[i]].values
+        y_data = data[features_btl[i]].values
+        
+        # Plot Scatter by Diagnosis
+        for diag_val, diag_label, col, mark in zip([0, 1], ['Benign', 'Malignant'], [COLOUR_B, COLOUR_M], ['o', '^']):
+            mask = data['malignant'] == diag_val
+            # Subsampling for clarity if dataset is large (STEP_SIZE=10)
+            ax.scatter(x_data[mask][::10], y_data[mask][::10], 
+                       s=30, marker=mark, color=col, label=diag_label if i == 0 else "", alpha=0.7)
 
+        # Regression Line
+        x_line, y_line = get_ls_data(x_data, y_data)
+        if x_line is not None:
+            ax.plot(x_line, y_line, color='black', linewidth=1.5, linestyle='--')
 
-COLOUR_B = '#0c2340'
-COLOUR_M = '#D4440D'
-SHOW_FIG=True
-if SHOW_FIG:
-    colours = {'Benign': COLOUR_B, 'Malignant': COLOUR_M}
-    markers = ['o','^']
-    # plt.figure(figsize=(8,6))
-    # sns.heatmap(
-        # cor_mat, annot=True, cmap='plasma', fmt=".2f", linewidths=.5, mask=mask
-    # )
-    # plt.title("Correlation Heatmap")
-    # plt.savefig(
-        # path.join(paths["figures"], 'btl-cv-cor-heatmap.pdf'),
-        # format='pdf', dpi=600, bbox_inches='tight'
-    # )
+        # Stats Annotation
+        stats = get_rho(x_data, y_data)
+        p_str = "p < .001" if stats['p'] < 0.001 else f"p = {stats['p']:.3f}"
+        stats_txt = f"r = {stats['r']:.3f}\n{p_str}"
+        ax.text(0.95, 0.05, stats_txt, transform=ax.transAxes, fontsize=TEXT_FONT_SIZE,
+                verticalalignment='bottom', horizontalalignment='right', 
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
-    # STEP_SIZE = 20
-    # sns_plt = sns.pairplot(
-        # data[features_btl + features_cv + malignant][::STEP_SIZE],
-        # hue="Diagnosis", palette=colours, markers=markers,
-        # corner=True, height=1, diag_kind='auto'
-    # )
-    # sns_plt.savefig(
-        # path.join(paths["figures"], 'btl_cv_cor_full.pdf'),
-        # format='pdf', dpi=600, bbox_inches='tight'
-    # )
-
-    # sns_plt = sns.pairplot(
-        # data[features_cv + malignant][::STEP_SIZE],
-        # hue="Diagnosis", palette=colours, markers=markers,
-        # corner=True, height=1.5
-    # )
-    # sns_plt.savefig(
-        # path.join(paths["figures"], 'btl_cor.pdf'),
-        # format='pdf', dpi=600, bbox_inches='tight'
-    # )
-
-    # sns_plt = sns.pairplot(
-        # data[features_btl + malignant][::STEP_SIZE],
-        # hue="Diagnosis", palette=colours, markers=markers,
-        # corner=True, height=1.5
-    # )
-    # sns_plt.savefig(
-        # path.join(paths["figures"], 'cv_cor.pdf'),
-        # format='pdf', dpi=600, bbox_inches='tight'
-    # )
-
-    features    = [features_btl + features_cv]
-    f_labels    = ['Asymmetry', 'Border Irregularity', 'Colour Variance']
-    malignancy  = ['Benign', 'Malignant']
-    colours     = {0:COLOUR_B, 1:COLOUR_M}
-    markers     = {0: 'o', 1:'^'}
-    PLT_SIZE    = 5
-    N_ROWS = 1
-    N_COLS = 3
-    fig, axes = plt.subplots(N_ROWS, N_COLS, figsize=(PLT_SIZE*N_COLS, PLT_SIZE*N_ROWS))
-    for i, feature in enumerate(f_labels):
-        ax          = axes[i]
-        STEP_SIZE   = 10
-        MARKER_SIZE = 20
-        for diagnosis, colour in colours.items():
-            subset = data[data['malignant'] == diagnosis].reset_index()
-            if i == 0:
-                ax.scatter(
-                    subset[features_cv[i]][::STEP_SIZE], subset[features_btl[i]][::STEP_SIZE],
-                    s=MARKER_SIZE, marker=markers[diagnosis], color=colour,
-                    label=malignancy[diagnosis]
-                )
-            else:
-                ax.scatter(
-                    subset[features_cv[i]][::STEP_SIZE], subset[features_btl[i]][::STEP_SIZE],
-                    s=MARKER_SIZE, marker=markers[diagnosis], color=colour
-                )
-            cor_stats = get_rho(data[features_cv[i]], data[features_btl[i]])
-            ax.text(
-                0.95, 0.1, r"r = " + f"{np.round(cor_stats['r'],3)}",
-                transform=ax.transAxes, fontsize=TEXT_FONT_SIZE, color=FONT_COLOUR,
-                verticalalignment='top', horizontalalignment='right', fontproperties=font
-            )
-            if np.round(cor_stats["p"],3) < 0.001:
-                ax.text(
-                    0.95, 0.05, "p < 0.001",
-                    transform=ax.transAxes, fontsize=TEXT_FONT_SIZE, color=FONT_COLOUR,
-                    verticalalignment='top', horizontalalignment='right', fontproperties=font
-                )
-            else:
-                ax.text(
-                    0.95, 0.05, f"p = {cor_stats['p']}",
-                    transform=ax.transAxes, fontsize=TEXT_FONT_SIZE, color=FONT_COLOUR,
-                    verticalalignment='top', horizontalalignment='right', fontproperties=font
-                )
-
-        ls = get_ls(data[features_cv[i]], data[features_btl[i]])['lsline']
-        ax.plot(data[features_cv[i]], ls, color=FONT_COLOUR, linewidth=2)
-
-        ax.set_title(feature, color=FONT_COLOUR, fontproperties=font, fontsize=FONT_SIZE)
-        if i == 1:
-            ax.set_xlabel('Computer Vision Estimates',
-                          color=FONT_COLOUR, fontproperties=font, fontsize=AXIS_LABEL_FONT_SIZE
-                        )
-        if i == 0:
-            ax.set_ylabel('Perceptual Strength (BTL model)',
-                          color=FONT_COLOUR, fontproperties=font, fontsize=AXIS_LABEL_FONT_SIZE
-                        )
-            ax.legend(loc='upper right', fontsize=TEXT_FONT_SIZE)
-        ax.set_xticks([-1,0,1])
-        ax.set_yticks([-1,0,1])
+        # Formatting
+        ax.set_title(label, fontsize=FONT_SIZE)
+        ax.set_xticks([-1, 0, 1])
+        ax.set_yticks([-1, 0, 1])
         ax.spines[["top", "right"]].set_visible(False)
+        
+        if i == 1:
+            ax.set_xlabel('Computer Vision Estimates', fontsize=AXIS_LABEL_FONT_SIZE)
+        if i == 0:
+            ax.set_ylabel('Perceptual Strength (BTL)', fontsize=AXIS_LABEL_FONT_SIZE)
+            ax.legend(loc='upper left', fontsize=TEXT_FONT_SIZE)
 
-    plt.rc_context({'ytick.color':FONT_COLOUR, 'ytick.size':12})
     plt.tight_layout()
+    plt.savefig(PATHS['figures'] / "btl_cv_cor_scatters.pdf", bbox_inches='tight')
 
-
-
-    plt.savefig(
-        PATHS['figures'] / "btl_cv_cor.pdf",
-        format='pdf', dpi=600, bbox_inches='tight'
-    )
-
+    # 4. Figure 2: Correlation Heatmap
     sns.set_theme(style='ticks')
+    plt.figure(figsize=(7, 6))
     mask = np.triu(np.ones_like(cor_features, dtype=bool))
-    # it was 'coolwarm', which was actually pretty good.
-    cmap_custom = LinearSegmentedColormap.from_list('custom', [COLOUR_B, COLOUR_M])
-    print(cor_features)
-
-    N_ROWS = 1
-    N_COLS = 1
-    fig, axes = plt.subplots(N_ROWS, N_COLS, figsize=(PLT_SIZE*N_COLS, PLT_SIZE*N_ROWS))
+    
+    # Mapping shortened labels for publication clarity
+    short_labels = ['A', 'B', 'C', 'CV_A', 'CV_B', 'CV_C', 'Malig.']
+    
     sns.heatmap(cor_features,
-            annot=True, fmt=".2f", square=True, linewidths=.5,
-            mask=mask,
-            xticklabels=['A', 'B', 'C', 'CV_A', 'CV_B', 'CV_C', ''],
-            yticklabels=['', 'B', 'C', 'CV_A', 'CV_B', 'CV_C', 'Malignancy'],
-            cmap='coolwarm', vmin = 0, vmax = 1, center = 0.5, cbar=False,
-            ax=axes
-        )
-    axes.tick_params(axis='both', which='both', length=0)
+                annot=True, fmt=".2f", square=True, linewidths=.5,
+                mask=mask, cmap='coolwarm', vmin=0, vmax=1, center=0.5,
+                xticklabels=short_labels, yticklabels=short_labels,
+                cbar_kws={"shrink": .8})
+    
+    plt.title("Spearman Correlation Matrix", fontsize=FONT_SIZE)
     plt.tight_layout()
+    plt.savefig(PATHS["figures"] / "btl_cv_cor_matrix.pdf", bbox_inches="tight")
+    
+    print(f"Figures saved to {PATHS['figures']}")
 
-    plt.savefig(
-        PATHS["figures"] / "btl_cv_cor_mat.pdf",
-        format="pdf", dpi=600, bbox_inches="tight"
-    )
-    plt.show()
+if __name__ == "__main__":
+    main()

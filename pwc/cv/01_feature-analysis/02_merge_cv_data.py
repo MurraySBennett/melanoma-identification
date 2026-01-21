@@ -8,7 +8,7 @@ save_data = True
 here = path.dirname(path.abspath(__file__))
 
 # exp_imgs        = pd.read_csv(path.join(here, 'sampled_shape_ids.txt'), delim_whitespace=True, header=0)
-image_ids       = glob.glob(path.join(PATHS['images'], "*.jpg"))
+image_ids       = glob.glob(path.join(PATHS['images'], "*.JPG"))
 image_ids       = [path.splitext(path.basename(p))[0] for p in image_ids]
 exp_imgs        = pd.DataFrame(image_ids, columns=['id'])
 

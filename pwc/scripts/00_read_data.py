@@ -1,33 +1,51 @@
 from pathlib import Path
 # from os import path
+import os
+import json
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from pprint import pprint as pp
+
 import glob
 import re
 import builtins
-import pandas as pd
-import numpy as np
 import scipy.stats
 import matplotlib.pyplot as plt
-import json
 from pprint import pprint as pp
 
 from ..config import (PATHS, FILES)
 from .descriptive_funcs import sem, meanRT, semRT, stdRT, exp_dur, pos_bias, count_left, count_right, count_timeouts
 # from plot_funcs import set_style, plt_rt, plt_bias, plt_coeffs, plt_shape, plt_corr, shape_dist
 
-global participant_conditions, pilot_data, sona_ids
-participant_conditions = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
-pilot_data = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
-sona_ids = dict(id=[], n_trials=[])
-subject = 1
+# global participant_conditions, pilot_data, sona_ids
+# participant_conditions = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
+# pilot_data = dict(symmetry=0, asymmetry=0,regular=0,irregular=0,uniform=0,colourful=0)
+# sona_ids = dict(id=[], n_trials=[])
+# subject = 1
 
 def main():
     save_data   = True
     n_files     = None
-    files = list(PATHS["raw_data"].glob("*elanoma*.csv"))
+    all_files = list(PATHS["raw_data"].iterdir())
+    files = sorted([
+        f for f in all_files if "melanoma" in f.name.lower() and f.suffix == ".csv"
+    ])
     if n_files is not None:
         files = files[:n_files]
-    data = read_all(files)
 
+    context = {
+        "subject_counter": 1,
+        "participant_conditions": {k: 0 for k in ['symmetry', 'asymmetry', 'regular', 'irregular', 'uniform', 'colourful']},
+        "pilot_data": {k: 0 for k in ['symmetry', 'asymmetry', 'regular', 'irregular', 'uniform', 'colourful']},
+        "sona_ids": {"id": [], "n_trials": []}
+    }
+
+    data = read_all(files, context)
+    if data.empty:
+        print("No data processed. Exiting.")
+        return
+    
     summary = data.groupby(['condition', 'subject']).agg({
         'response': [pos_bias, count_left, count_right, count_timeouts],
         'duration': [meanRT, semRT, stdRT, exp_dur]
@@ -35,17 +53,14 @@ def main():
     summary.columns = [col[1] if col[1] else col[0] for col in summary.columns]
 
     if save_data:
-        data.to_csv(
-            PATHS["raw_data"] / "00_data-raw.csv",
-            index = False
-        )
+        data.to_csv( PATHS["raw_data"] / "00_data-raw.csv", index = False)
 
     data = data[data['ended_on'] == 'response']# remove timed-out responses
     data = data[data['duration'] >= 300]
+
     # reverse scoring conditions -- following this, higher BTL estimates reflect greater irregularity/badness
-    data = reverse_score(data, 'symmetry')
-    data = reverse_score(data, 'regular') # reverse score regular, so that victories are won by the irregular features. This gives consistency to the other features (A and B), but not the CV estimate (you reverse that, too)
-    data = reverse_score(data, 'uniform')
+    for cond in ['symmetry', 'regular', 'uniform']:
+        data = reverse_score(data, cond)
 
     asymmetry = data[
         (data['condition'] == 'asymmetry') | (data['condition'] == 'symmetry')
@@ -58,7 +73,6 @@ def main():
         ]
     return_trials_remaining(data)
 
-    save_data = False
     if save_data:
         data.to_csv(
             PATHS["clean_data"] / "data_processed.csv",
@@ -78,88 +92,66 @@ def main():
         )
 
 
-def process_data(file):
+def process_data(file, context):
     """ read and organise data """
-    global subject
     data_columns = [
-    "sender", "timestamp", "pID", 
-    "condition",  "blockNo", "practice", "trialNo", 
-    "img_left", "img_right", "winner", "loser", 
-    "duration", "response", "ended_on"]
+        "sender", "timestamp", "pID", "subject",
+        "condition",  "blockNo", "practice", "trialNo", 
+        "img_left", "img_right", "winner", "loser", 
+        "duration", "response", "ended_on"
+    ]
+
     try:
-        df = pd.read_csv(file)
-        if df.empty:
-            print(f"{file} contains no data")
+        if file.stat().st_size < 10_000:
             return None
-    except pd.errors.EmptyDataError:
-        print(f"{file} is empty")
-        return None
-    if file.stat().st_size < 10_000:
-        print(f"{file} is an irregularly small file")
-        return None
 
-    pID = get_id(df["url"][0], file)
-    platform = get_platform(df["url"][0], file)
-    if platform is not None and platform == "sona":
-        sona_ids["id"].extend([pID])
-    condition = df["condition"][1]
+        df = pd.read_csv(file)
+        if df.empty: return None
+            # print(f"{file} contains no data")
 
-    try:
-        df = df.loc[(df["sender"] == "trial") & (df["practice"] == False)]
-    except Exception as e:
-        print(f"{file} has issues filtering out extraneous senders: {e}")
+        first_url = df["url"].dropna().iloc[0] if not df["url"].dropna().empty else "{}"
+        pID = get_id(first_url, file)
+        platform = get_platform(df["url"][0], file)
+
         if platform == "sona":
-            sona_ids["n_trials"].extend([None])
-        return None
-    try:
+            context["sona_ids"]["id"].append([pID])
+
+        condition = df["condition"].dropna().iloc[0] if "condition" in df.columns else "unknown"
+
+        df = df.loc[(df["sender"] == "trial") & (df["practice"] == False)].copy()
         df["pID"] = pID
         df["condition"] = condition
-        df["response"] = df["response"].replace({"nan": np.nan})
-        df["response"] = df["response"].map({"0": 0, "1": 1}, na_action='ignore').astype("Int64")
 
-        df["winner"] = df["winner"].astype("str")
-        df["loser"] = df["loser"].astype("str")
-        df["winner"] = [x.replace(".JPG", "") for x in df["winner"]]
-        df["loser"] = [x.replace(".JPG", "") for x in df["loser"]]
+        for col in ["winner", "loser", "img_left", "img_right"]:
+            df[col] = df[col].apply(lambda x: Path(str(x)).stem if pd.notnull(x) else "nan")
+        
+        df["response"] = pd.to_numeric(df["response"], errors='coerce').astype("Int64")
+        df["duration"] = pd.to_numeric(df["duration"], errors='coerce') - 1500
 
-        df["img_left"] = [x.replace(".JPG", "") for x in df["img_left"]]
-        df["img_right"] = [x.replace(".JPG", "") for x in df["img_right"]]
-        df["duration"] = df["duration"] - 1500 # 1500ms used to load images. The ISI and cue are shown in this initial period.
+        df = df.drop_duplicates(subset=["blockNo", "trialNo"])
+        df = df[df["winner"] != "nan"].dropna(subset=["winner", "loser"])
 
-        duplicates = df.duplicated(subset=["blockNo", "trialNo"], keep = False)
-        df = df[~duplicates]
-        df = df[~(df["winner"] == "nan")]
-        df = df[~(df["loser"] == "nan")]
-
-        df.dropna()
-        df = df[data_columns].reset_index(drop=True)
-        participant_conditions[condition] += 1
+        context["participant_conditions"][condition] = context["participant_conditions"].get(condition, 0) + 1
         if platform == "sona":
-            sona_ids["n_trials"].extend([len(df)])
-        if "btl" in file.stem:
-            pilot_data[condition] += 1
+            context["sona_ids"]["n_trials"].append(len(df))
+        df["subject"] = context["subject_counter"]
+        context["subject_counter"] += 1
 
-        df["subject"] = subject
-        subject += 1
-        return df
-
+        return df[data_columns]
+        
     except Exception as e:
-        print(f"{file}: {e}")
-        if platform == "sona":
-            sona_ids["n_trials"].extend([None])
+        print(f"Error in {file.name}: {e}")
         return None
 
 
-def get_vars():
-    global_vars = {}
-    for name, value in globals().items():
-        if name not in builtins.__dict__ and not name.startswith('__'):
-            var_info = {}
-            var_info["type"] = str(value.dtype) if isinstance(value, np.ndarray) else type(value).__name__
-            var_info["shape"] = np.shape(value) if isinstance(value, np.ndarray) else None
-            var_info["nans"] = np.isnan(value).any() if isinstance(value, np.ndarray) else False
-            global_vars[name] = var_info
-    return global_vars
+def read_all(files, context):
+    """Aggregates all files into one dataframe"""
+    dfs = [process_data(f, context) for f in files]
+    valid_dfs = [d for d in dfs if d is not None]
+    if not valid_dfs:
+        return pd.DataFrame()
+    df = pd.concat(valid_dfs, ignore_index=True)
+    return df
 
 
 def get_id(value, file):
@@ -182,29 +174,10 @@ def get_platform(value, file):
         return None
 
 
-
-def read_all(files):
-    """ read all files into the one dataframe """
-    dfs = list(map(process_data, files))
-    df = pd.concat(dfs, ignore_index=True)
-
-    print(f"All Data:\n",participant_conditions)
-    print(f"Offline Pilot Data:\n", pilot_data)
-
-    pp("SONA IDs:")
-    pp(pd.DataFrame(sona_ids).sort_values(by="id"))
-    return df
-
-
-def process_shape(path, exp_ids):
-    df = pd.read_csv(path, delim_whitespace=True, header=0)
-    df['id'] = [x.strip('.png') for x in df['id']]
-    df = df[df['id'].isin(exp_ids)].reset_index(drop=True)
-    return df
-
-
 def reverse_score(df, key):
-    df.loc[df['condition'] == key, 'response'] = 1 - df.loc[df['condition'] == key, 'response']
+    mask = df['condition'] == key
+    if mask.any():
+        df.loc[mask, 'response'] = 1 - df.loc[mask, 'response']
     return df
 
 

@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
 import glob
 import concurrent.futures
 import numpy as np
 import pandas as pd
 import logging
 import cv2 as cv
+import matplotlib
+matplotlib.use('Agg') # force non-interactice backend
 import matplotlib.pyplot as plt
 from time import perf_counter
 
@@ -49,6 +52,8 @@ def get_shape_factor(contour):
     # "circularity index" -- Features for Melanoma Lesions Characterization in Computer Vision Systems
     a = cv.contourArea(contour)
     p = cv.arcLength(contour, True)
+    if p == 0:
+        return 0.0
     f = np.divide(4 * np.pi * a, p**2) 
     return np.round(f, 4)
 
@@ -59,31 +64,36 @@ def get_area(contour):
 
 def center_segment(mask, contour):
     M = cv.moments(contour)
+    # if M['m00'] == 0:
+    #     return mask
     cx = int(M['m10']/M['m00'])
     cy = int(M['m01']/M['m00'])
-    theta = 0.5 * np.arctan2(2 * M['mu11'], M['mu20'] - M['mu02'])
 
+    # theta = 0.5 * np.arctan2(2 * M['mu11'], M['mu20'] - M['mu02'])
     tx = int(mask.shape[1] / 2) - cx
     ty = int(mask.shape[0] / 2) - cy
     translation_matrix = np.float32([[1, 0, tx],[0, 1, ty]])
-    centered_mask = cv.warpAffine(mask, translation_matrix, (mask.shape[1], mask.shape[0]))
-
-    return centered_mask
+    return cv.warpAffine(mask, translation_matrix, (mask.shape[1], mask.shape[0]))
 
 
 def align_major_axis(mask, contour):
-    ellipse = cv.fitEllipse(contour)
-    major_axis = max(ellipse[1])
-    major_angle = ellipse[2]
+    # ellipse = cv.fitEllipse(contour)
+    # major_axis = max(ellipse[1])
+    # major_angle = ellipse[2]
+    # rotation_angle = major_angle + 90 if major_angle < 90 else major_angle - 90
+    # rotation_matrix = cv.getRotationMatrix2D((mask.shape[1]/2, mask.shape[0]/2), rotation_angle, 1)
+    # rotated_mask = cv.warpAffine(mask, rotation_matrix, (mask.shape[1], mask.shape[0]))
+    # return rotated_mask
 
-    if major_angle < 90:
-        rotation_angle = major_angle + 90
+    M = cv.moments(contour)
+    if abs(M['mu20'] - M['mu02']) > 1e-5:
+        theta = 0.5 * np.arctan2(2 * M['mu11'], M['mu20'] - M['mu02'])
+        rotation_angle  = np.degrees(theta)
     else:
-        rotation_angle = major_angle - 90
-    rotation_matrix = cv.getRotationMatrix2D((mask.shape[1]/2, mask.shape[0]/2), rotation_angle, 1)
-
-    rotated_mask = cv.warpAffine(mask, rotation_matrix, (mask.shape[1], mask.shape[0]))
-    return rotated_mask
+        rotation_angle = 0.0
+    center = (mask.shape[1] / 2, mask.shape[0] / 2)
+    rotation_matrix = cv.getRotationMatrix2D(center, rotation_angle, 1)
+    return cv.warpAffine(mask, rotation_matrix, (mask.shape[1], mask.shape[0]))
 
 
 def rotate_mask(mask, rotation_angle=90):
@@ -122,14 +132,29 @@ def get_asymmetry(mask, contour):
     #https://link.springer.com/article/10.1007/s42452-019-0786-8#Sec2
     centered_mask = center_segment(mask, contour)
     rotated_mask = align_major_axis(centered_mask, contour)
-    L = rotated_mask
+
+    # L = rotated_mask
+    # Lx = cv.flip(L, 0)
+    # dLx= (L + Lx) % 2
+    # Ly = cv.flip(L, 1)
+    # dLy= (L + Ly) % 2
+    # x_symmetry = np.round(np.divide(np.sum(dLx), np.sum(Lx)), 4)
+    # y_symmetry = np.round(np.divide(np.sum(dLy), np.sum(Ly)), 4)
+    # return [x_symmetry, y_symmetry]    
+    
+    L = (rotated_mask > 0).astype(np.uint8)
     Lx = cv.flip(L, 0)
-    dLx = (L + Lx) % 2
+    dLx = cv.bitwise_xor(L, Lx)
     Ly = cv.flip(L, 1)
-    dLy = (L + Ly) % 2
-    x_symmetry = np.round(np.divide(np.sum(dLx), np.sum(Lx)), 4)
-    y_symmetry = np.round(np.divide(np.sum(dLy), np.sum(Ly)), 4)
-    return [x_symmetry, y_symmetry]
+    dLy = cv.bitwise_xor(L, Ly)
+
+    sum_L = np.sum(L)
+    if sum_L == 0:
+        return [np.nan, np.nan]
+    x_asym = np.round(np.sum(dLx) / sum_L, 4)
+    y_asym = np.round(np.sum(dLy) / sum_L, 4)
+     
+    return [x_asym, y_asym]
 
 
 def AP_ratio(contour):
@@ -168,11 +193,11 @@ def measure_shape(mask):
 
 
 def read_mask(path):
-    mask = cv.imread(path, -1)
-    thresh = 127
-    mask  = cv.threshold(mask, thresh, 1, cv.THRESH_BINARY)[1]    
-    mask_id = os.path.basename(path)
-    return [mask, mask_id] 
+    mask = cv.imread(str(path), cv.IMREAD_GRAYSCALE)
+    if mask is None:
+        return [None, Path(path).name]
+    _, mask_bin = cv.threshold(mask, 127, 1, cv.THRESH_BINARY)
+    return [mask_bin, Path(path).name] 
 
 
 def get_contour(mask):
@@ -180,12 +205,33 @@ def get_contour(mask):
     return contour[0]
 
 
+def worker_pipeline(mask_path):
+    """ read, process, return results. """
+    try:
+        mask, mask_id = read_mask(mask_path)
+        if mask is None:
+            return None
+        contour = get_contour(mask)
+        x_sym, y_sym = get_asymmetry(mask, contour)
+        compact_factor = get_shape_factor(contour)
+        ap_ratio = AP_ratio(contour)
+        return {
+            'id': mask_id,
+            'x_sym': x_sym,
+            'y_sym': y_sym,
+            'compact': compact_factor,
+            'ap_ratio': ap_ratio
+        }
+    except Exception as e:
+        print(f"Failed to process {os.path.basename(mask_path)}: {e}")
+
+
 def main():
-    batch_size = (os.cpu_count()-1) * 2**6
+    batch_size = 128 #(os.cpu_count()-1) * 2**6
     n_images = None
 
-    mask_paths = glob.glob(os.path.join(PATHS['masks'], '*.png'))
-    mask_paths = sorted(mask_paths)
+    mask_dir = Path(PATHS['masks'])
+    mask_paths = sorted(list(mask_dir.glob('*.png')))
 
     if n_images is not None:
         mask_paths = mask_paths[:n_images]
@@ -193,18 +239,13 @@ def main():
     
     # logger.info('id,x_sym,y_sym,compact,ap_ratio')
     all_features = []
-
-    with concurrent.futures.ThreadPoolExecutor() as io_exec:
-        for i in range(0, len(mask_paths), batch_size):
-            batch_mask_paths = mask_paths[i:i+batch_size]
-            batch_masks = list(io_exec.map(read_mask, batch_mask_paths))
-            with concurrent.futures.ProcessPoolExecutor() as cpu_executor:
-                shape_features = list(cpu_executor.map(measure_shape, batch_masks))
-                all_features.extend(shape_features)
-
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        results = list(executor.map(worker_pipeline, mask_paths, chunksize=10))
+    all_features = [r for r in results if r is not None]
+    
     df = pd.DataFrame(all_features)
-    df = df[['id', 'x_sym', 'y_sym', 'compact', 'ap_ratio']]
-    df.to_csv( FILES['cv_shape'], sep=',', index=False, na_rep='NA')
+    df.to_csv( FILES['cv_shape'], index=False, na_rep='NA')
+    print(f"Shape featurs saved to: {FILES['cv_shape']} ")
 
     # for i in range(0, len(batch_masks)):
     #     show(batch_masks, 'test_label')

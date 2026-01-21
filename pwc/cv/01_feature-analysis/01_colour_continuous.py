@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from os import path
 import numpy as np
 import pandas as pd
@@ -8,6 +9,8 @@ import glob
 from time import perf_counter
 import concurrent.futures
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from ...config import (PATHS, FILES)
@@ -23,6 +26,58 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 # logger.info(f'id,rms,coeff_1,coeff_2,coeff_3,mom1_1,mom2_1,mom3_1,mom4_1,mom1_2,mom2_2,mom3_2,mom4_2,mom1_3,mom2_3,mom3_3,mom4_3')
+
+def worker_pipeline(paths):
+    img_path, mask_path = paths
+    label = Path(img_path).name
+    try:
+        img = cv.imread(str(img_path))
+        if img is None: return None
+        img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
+        mask = cv.imread(str(mask_path), cv.IMREAD_GRAYSCALE)
+        if mask is None: return None
+        
+        mask_target = mask > 0
+        lesion_pixels = img[mask_target]
+        if lesion_pixels.size == 0:
+            return {'id': label, **{k: np.nan for k in COLUMN_KEYS}}
+        results = {'id': label}
+        
+        stds = np.std(lesion_pixels, axis=0)
+        means = np.mean(lesion_pixels, axis=0)
+        
+        results['rms'] = np.sqrt(np.mean(stds**2))
+        
+        # Channels 0, 1, 2 (L, a, b)
+        # for i in range(3):
+        #     ch = lesion_pixels[:, i].astype(np.float64)
+        #     m = means[i]
+        #     s = stds[i]
+            
+        #     # Coeff Var (with guard for zero mean)
+        #     results[f'coeff_{i+1}'] = s / m if m != 0 else 0
+            
+        #     # Moments
+        #     results[f'mom1_{i+1}'] = m
+        #     results[f'mom2_{i+1}'] = s
+        #     results[f'mom3_{i+1}'] = np.mean(ch**3)
+        #     results[f'mom4_{i+1}'] = np.mean(ch**4)
+            
+        return results
+
+    except Exception as e:
+        print(f"Error processing {label}: {e}")
+        return None
+
+# Global key order for consistency
+COLUMN_KEYS = [
+    'rms', #'coeff_1', 'coeff_2', 'coeff_3', 
+    # 'mom1_1', 'mom2_1', 'mom3_1', 'mom4_1', 
+    # 'mom1_2', 'mom2_2', 'mom3_2', 'mom4_2', 
+    # 'mom1_3', 'mom2_3', 'mom3_3', 'mom4_3'
+]
+        
+
 
 def rms(values):
     squared = [x ** 2 for x in values]
@@ -137,32 +192,33 @@ mask_paths = sorted(mask_paths)
 
 
 def main():
+    # Use Pathlib for robust cross-platform pathing
+    img_dir = Path(PATHS['images'])
+    mask_dir = Path(PATHS['masks'])
+    
+    # Sort both to ensure they align (assuming identical filenames)
+    img_paths = sorted(list(img_dir.glob('*.JPG')))
+    mask_paths = sorted(list(mask_dir.glob('*.png')))
+    
+    # Pair them up
+    path_pairs = list(zip(img_paths, mask_paths))
+    
     all_features = []
-    counter = 0
-    with concurrent.futures.ThreadPoolExecutor() as io_exec:
-        initialise = perf_counter()
-        for i in range(0, len(image_paths), batch_size):
-            start = perf_counter()
-            batch_img_paths = image_paths[i:i+batch_size]
-            batch_mask_paths = mask_paths[i:i+batch_size]
-            batch_images = list(io_exec.map(get_lesion, batch_img_paths, batch_mask_paths))
-            counter += len(batch_images)
-
-            with concurrent.futures.ProcessPoolExecutor() as cpu_executor:
-                continuous_colours = list(cpu_executor.map(get_metrics, batch_images))
-                all_features.extend(continuous_colours)
-            end = perf_counter() 
-            print(f'{counter} / {len(mask_paths)}: {np.round(counter / len(mask_paths) * 100,2)}%, est time remaining: {np.round((end-start)/batch_size * (len(mask_paths) - counter),2)/60}m, total: {np.round(end-initialise,2)}s')
-
+    
+    # Parallel Processing (Single Executor)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        # Use a sensible chunksize to reduce overhead
+        results = list(executor.map(worker_pipeline, path_pairs, chunksize=20))
+        
+    all_features = [r for r in results if r is not None]
+    
+    # Create DataFrame and enforce order
     df = pd.DataFrame(all_features)
-    column_order = [
-        'id', 'rms', 'coeff_1', 'coeff_2', 'coeff_3', 
-        'mom1_1', 'mom2_1', 'mom3_1', 'mom4_1', 
-        'mom1_2', 'mom2_2', 'mom3_2', 'mom4_2', 
-        'mom1_3', 'mom2_3', 'mom3_3', 'mom4_3'
-    ]
-    df = df[column_order]
-    df.to_csv( FILES['cv_colour'], sep=',', index=False, na_rep='NA')
+    df = df[['id'] + COLUMN_KEYS]
+    
+    # Save with full precision (round at save if preferred)
+    df.to_csv(FILES['cv_colour'], index=False, na_rep='NA')
+    print(f"Done. Processed {len(all_features)} lesions.")
 
 if __name__ == '__main__':
     main()

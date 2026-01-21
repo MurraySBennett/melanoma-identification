@@ -6,6 +6,7 @@ import numpy as np
 # 3. data = cv_btl_scale(data)
 
 def abc_aligned(data):
+    # higher values mean higher asymmetry, border irregularity, and colour variance
     data["sym"] = data[["x_sym", "y_sym"]].mean(axis=1)
     data["bor"] = 1 - data["compact"]
     data["col"] = data["rms"]

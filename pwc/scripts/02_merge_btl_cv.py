@@ -18,9 +18,9 @@ cv_data = pd.read_csv(FILES['cv_data'], delimiter = ",", header = 0)
 
 # outer merge while-ever you have incomplete data.
 data = cv_data\
-        .merge(btl_sym, on="id", how="outer")\
-        .merge(btl_bor, on="id", how="outer")\
-        .merge(btl_col, on="id", how="outer")
+        .merge(btl_sym, on="id", how="inner") \
+        .merge(btl_bor, on="id", how="inner") \
+        .merge(btl_col, on="id", how="inner") 
 
 if SAVE_DATA:
     data.to_csv( FILES['btl_cv'], index = False)

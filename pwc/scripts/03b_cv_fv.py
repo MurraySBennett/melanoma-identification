@@ -6,6 +6,7 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 
 from ..config import (PATHS, FILES)
+from .cv_transforms import abc_aligned, cv_btl_scale
 
 # font = FontProperties(fname="Garamond BoldCondensed.ttf")
 font = FontProperties()
@@ -23,8 +24,9 @@ data_path   = FILES['btl_cv']
 img_path    = PATHS['images']
 fig_path    = PATHS['figures']
 data = pd.read_csv(data_path)
+data = abc_aligned(data)
 
-features    = ['pi_sym', 'pi_bor', 'pi_col']
+features    = ['sym', 'bor', 'col']
 data        = data[['id'] + features]
 levels      = ['High', 'Moderate', 'Low']
 feature_labels = ["Asymmetry", "Border Irregularity", "Colour Variance"]
@@ -80,7 +82,6 @@ for i, feature in enumerate(features):
         for img_id in ids:
             img = load_img(img_id, img_path)
             stacked_images.append(img)
-
         num_rows = len(ids) // N_PER_COL
         remainder = len(ids) % N_PER_COL
         rows = []
@@ -92,7 +93,6 @@ for i, feature in enumerate(features):
             last_row_images = stacked_images[-remainder:]
             last_row = np.hstack(last_row_images)
             rows.append(last_row)
-
         final_image = np.vstack(rows)
         axs[j, i].imshow(final_image)
         axs[j, i].tick_params(labelbottom=False, labelleft=False)
@@ -112,7 +112,7 @@ plt.subplots_adjust(wspace=0.02, hspace=0.02)
 
 
 plt.savefig(
-    fig_path / "btl_facevalidity.pdf",
+    fig_path / "cv_facevalidity.pdf",
     format='pdf', dpi=600, bbox_inches='tight'
 )
 
