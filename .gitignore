@@ -80,3 +80,13 @@ images/masks/*.png
 *.bst
 
 .Rproj.user
+
+# The image set moved to $DATA_ROOT/melanoma-images on 2026-08-18 — it is shared
+# by pwc, grt, melnet, trust_calibration and confidnet, so one copy serves all
+# five. That directory carries a manifest, a fetch script and the provenance.
+# History still holds these files if an old commit needs to be checked out.
+images/
+
+# Python environments, created by direnv + uv. Regenerable.
+.venv/
+.direnv/

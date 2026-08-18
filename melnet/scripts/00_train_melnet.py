@@ -63,7 +63,14 @@ tolerance = 0.02
 
 # Set Paths, read Data
 base_dir = Path(os.getcwd()).parent.parent
-image_dir= base_dir / 'images' / 'resized'
+# Images are shared with pwc, grt, trust_calibration and confidnet, and live in
+# $DATA_ROOT — see $DATA_ROOT/melanoma-images/README.md. Falls back to the
+# in-repo copy when DATA_ROOT is unset.
+_data_root = os.environ.get('DATA_ROOT')
+_shared = Path(_data_root) / 'melanoma-images' if _data_root else None
+image_dir = (_shared / 'resized'
+             if _shared and (_shared / 'resized').is_dir()
+             else base_dir / 'images' / 'resized')
 csv_path = base_dir / 'pwc' / 'data' / 'estimates' / 'btl_cv_data.csv'
 fig_dir  = base_dir / 'melnet' / 'figures'
 data_dir = base_dir / 'melnet' / 'data'

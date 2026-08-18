@@ -1,0 +1,4 @@
+# grt is mostly R; the Python here is plotting and light data handling.
+numpy
+pandas
+matplotlib
